@@ -338,7 +338,9 @@
       { id: "rating", label: "Average Rating", value: g.rating, decimals: 1, delta: 2.1, spark: [4.6,4.6,4.7,4.7,4.8,4.8,4.8,4.9,4.9,4.9,4.9,4.9,4.9,4.9], icon: "star", source: "Google Business Profile", tip: "Your average Google review score. Above 4.7 is the threshold where rating stops being a conversion blocker." },
       { id: "revs", label: "Total Reviews", value: g.reviews, delta: 19.3, spark: [78,84,89,95,101,107,112,118,123,128,133,137,140,142], icon: "users", source: "Google Business Profile", tip: "Total published Google reviews. Volume matters as much as score — it is a direct local ranking factor." },
       { id: "resp", label: "Response Rate", value: g.responseRate, suffix: "%", delta: 11.2, spark: [62,66,70,74,78,81,84,87,89,91,93,94,95,96], icon: "check", source: "Google Business Profile", tip: "Share of reviews that received a reply. Google rewards responsive profiles, and replying to negatives recovers roughly a third of unhappy customers." },
-      { id: "views", label: "Profile Views", value: g.views, format: "compact", delta: g.viewsDelta, spark: [9100,9800,10400,11200,12000,12800,13600,14300,15100,15900,16700,17400,17900,18400], icon: "eye", source: "Google Business Profile", tip: "How many times the business listing was shown on Google Search and Maps." }
+      { id: "views", label: "Profile Views", value: g.views, format: "compact", delta: g.viewsDelta, spark: [9100,9800,10400,11200,12000,12800,13600,14300,15100,15900,16700,17400,17900,18400], icon: "eye", source: "Google Business Profile", tip: "How many times the business listing was shown on Google Search and Maps." },
+      { id: "photos", label: "Photos Added", value: g.photosThisMonth, delta: 63.6, spark: [4,6,7,9,10,11,12,13,14,15,16,17,18,18], icon: "eye", source: "Google Business Profile", tip: "New photos published this period. Profiles with fresh photos get materially more views than static ones — Google favours active listings." },
+      { id: "posts", label: "Posts Published", value: g.postsThisMonth, delta: 37.5, spark: [3,4,5,6,6,7,8,8,9,10,10,11,11,11], icon: "doc", source: "Google Business Profile", tip: "Google Business Profile posts published this period. Posts appear directly in the listing and keep it looking actively managed." }
     ]);
 
     $("#gbpActions").innerHTML = g.actions.map(a => `
@@ -427,6 +429,9 @@
       window.Modules.refreshRankings();
       window.Modules.renderGa4();
       window.Modules.renderLdBars();
+      window.Modules.renderGbpExtra();
+      window.Modules.renderAiExtra();
+      window.Modules.renderActionsExtra();
     }
   }
 
@@ -571,6 +576,9 @@
     window.Modules.renderLocalDominator();
     window.Modules.renderGa4();
     window.Modules.refreshRankings();
+    window.Modules.renderGbpExtra();
+    window.Modules.renderAiExtra();
+    window.Modules.renderActionsExtra();
 
     drawCharts();
     bindTips();

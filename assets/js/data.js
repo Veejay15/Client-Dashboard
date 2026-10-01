@@ -246,7 +246,35 @@ const DEMO = {
       { label: "Message requests",   value:  48, delta: 54.8 }
     ],
     photosThisMonth: 18,
-    postsThisMonth: 11
+    postsThisMonth: 11,
+
+    /* Rating distribution — ordered scale, so a diverging stacked bar. */
+    distribution: [
+      { stars: 5, count: 124 },
+      { stars: 4, count: 12 },
+      { stars: 3, count: 4 },
+      { stars: 2, count: 1 },
+      { stars: 1, count: 1 }
+    ],
+
+    recentReviews: [
+      { name: "Daniel R.",  initials: "DR", stars: 5, when: "3 days ago",  text: "Crew installed 140 ft of wrought iron along our Lincoln Park property. Clean welds, no gaps, finished a day early. Quote was exactly what we paid.", replied: true },
+      { name: "Marisol V.", initials: "MV", stars: 5, when: "6 days ago",  text: "Had a gate motor fail after a storm. They came out same week and rebuilt the whole hinge assembly instead of upselling me a new gate.", replied: true },
+      { name: "Kevin O.",   initials: "KO", stars: 4, when: "1 week ago",  text: "Great fence, great price. Only knocking a star because scheduling took two calls to pin down. Work itself was excellent.", replied: true },
+      { name: "Theresa B.", initials: "TB", stars: 5, when: "2 weeks ago", text: "Third project with Americana — two rentals and now our own place. They are the only fence company in Chicago I will call.", replied: false }
+    ],
+
+    /* Monthly GBP interactions — same unit, one axis. */
+    interactions: {
+      labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+      values: [412, 487, 561, 638, 724, 816]
+    },
+
+    questions: [
+      { q: "Do you install on commercial properties?", answered: true,  when: "Answered 4 days ago" },
+      { q: "What is the lead time for a custom gate?",  answered: true,  when: "Answered 2 weeks ago" },
+      { q: "Do you offer financing?",                   answered: false, when: "Asked 5 days ago — unanswered" }
+    ]
   },
 
   /* ---------------------------------------------------------- AI visibility
@@ -260,6 +288,33 @@ const DEMO = {
       { name: "Google AI Overviews", short: "AIO", rate: 36, queries: 120, note: "Appears in 43 of 120 AI Overviews" },
       { name: "Microsoft Copilot", short: "CP", rate: 29, queries: 120, note: "Cited in 35 of 120 tracked prompts" },
       { name: "Perplexity", short: "PX", rate: 27, queries: 120, note: "Cited in 32 of 120 tracked prompts" }
+    ],
+
+    /* Citation rate over time — single series, one axis. */
+    trend: {
+      labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+      values: [11, 14, 19, 24, 29, 34]
+    },
+
+    /* A sample of the tracked prompt set and the current result. */
+    prompts: [
+      { prompt: "best wrought iron fence installer in Chicago",      cited: true,  rank: 1, source: "ChatGPT Search" },
+      { prompt: "who installs custom driveway gates near Lincoln Park", cited: true, rank: 2, source: "Google AI Overviews" },
+      { prompt: "how much does an iron fence cost in Chicago",       cited: true,  rank: 3, source: "Perplexity" },
+      { prompt: "fence repair companies open on weekends Chicago",   cited: false, rank: null, source: "ChatGPT Search" },
+      { prompt: "top rated fence contractors Chicago IL",            cited: true,  rank: 2, source: "Microsoft Copilot" },
+      { prompt: "wrought iron vs aluminum fence which is better",    cited: false, rank: null, source: "Google AI Overviews" },
+      { prompt: "commercial fencing contractor Chicago",             cited: false, rank: null, source: "ChatGPT Search" },
+      { prompt: "emergency fence repair Chicago",                    cited: true,  rank: 1, source: "Perplexity" }
+    ],
+
+    /* What moves the number. */
+    drivers: [
+      { label: "Review volume & recency", weight: 92, note: "AI assistants lean heavily on review signals" },
+      { label: "Structured data / schema", weight: 78, note: "LocalBusiness markup is complete" },
+      { label: "Citation consistency",     weight: 64, note: "2 directories still carry an old phone number" },
+      { label: "Content depth per service", weight: 51, note: "Thin pages on 4 of 9 services" },
+      { label: "Third-party mentions",     weight: 38, note: "Weakest driver — few editorial mentions" }
     ]
   },
 
@@ -312,6 +367,21 @@ const DEMO = {
       desc: "11 keywords sit in positions 11–20 with 100+ monthly impressions each. Title tag and first-100-words optimisation moves most of these to page 1 within 30 days.",
       impact: "Medium", effort: "Low", source: "gsc-page2-sprint"
     }
+  ],
+
+  /* Work already shipped against the plan, and what is queued next. */
+  completedActions: [
+    { title: "Rebuilt /custom-gates with schema markup", impact: "Position 11 → 5", when: "Sep 2026" },
+    { title: "Published 'Aluminum vs Iron Fence' guide",  impact: "+48 clicks/mo",  when: "Sep 2026" },
+    { title: "Added 18 geotagged GBP photos",             impact: "+27% profile views", when: "Aug 2026" },
+    { title: "Fixed NAP across 9 directories",            impact: "Map pack +6 keywords", when: "Aug 2026" },
+    { title: "Resolved 23 missing image alt tags",        impact: "Accessibility + image SEO", when: "Jul 2026" }
+  ],
+
+  roadmap: [
+    { phase: "Next 30 days", status: "active", items: ["Fix Bing brand-term CTR", "Add 4 missing GBP categories", "Launch review request script"] },
+    { phase: "30–60 days",   status: "queued", items: ["Build 6 service-city pages", "Page-2 keyword sprint", "Citation cleanup — 2 directories"] },
+    { phase: "60–90 days",   status: "queued", items: ["Commercial services content hub", "Editorial link outreach", "Schema expansion across services"] }
   ],
 
   /* ------------------------------------------------- work completed / feed */

@@ -397,6 +397,135 @@
       </div>`;
   }
 
+  /* ================================================ GBP — extended cards */
+  function stars(n) {
+    return `<span class="stars">${Array.from({ length: 5 }, (_, i) =>
+      `<svg style="${i < n ? "" : "opacity:.2"}"><use href="#i-star"></use></svg>`).join("")}</span>`;
+  }
+
+  function renderGbpExtra() {
+    const g = DEMO.gbp;
+
+    $("#gbpRecent").innerHTML = g.recentReviews.map(r => `
+      <div class="rev">
+        <span class="rev__av">${r.initials}</span>
+        <div class="rev__body">
+          <div class="rev__top">
+            <b>${r.name}</b>
+            ${stars(r.stars)}
+            <span class="rev__when">${r.when}</span>
+          </div>
+          <p class="rev__text">${r.text}</p>
+          <span class="pill ${r.replied ? "pill--good" : "pill--warn"}" style="margin-top:7px">
+            <svg><use href="#i-${r.replied ? "check" : "alert"}"></use></svg>
+            ${r.replied ? "Replied" : "Awaiting reply"}
+          </span>
+        </div>
+      </div>`).join("");
+
+    window.Charts.columns($("#gbpChart"), {
+      labels: g.interactions.labels,
+      values: g.interactions.values,
+      color: cssVar("--series-1"),
+      height: 230,
+      unit: " interactions",
+      ariaLabel: "Total profile interactions by month"
+    });
+
+    const total = g.distribution.reduce((s, d) => s + d.count, 0);
+    $("#gbpDist").innerHTML = g.distribution.map(d => `
+      <div class="hbar" data-tip="${d.count} of ${total} reviews gave ${d.stars} star${d.stars > 1 ? "s" : ""}.">
+        <span class="hbar__name" style="width:58px">${d.stars} star${d.stars > 1 ? "s" : ""}</span>
+        <span class="hbar__track">
+          <span class="hbar__fill" data-w="${(d.count / total * 100).toFixed(1)}"
+                style="background:${d.stars >= 4 ? cssVar("--series-1") : cssVar("--demph")}"></span>
+        </span>
+        <span class="hbar__val">${d.count}</span>
+      </div>`).join("");
+    requestAnimationFrame(() =>
+      $$("#gbpDist .hbar__fill").forEach(f => f.style.width = f.dataset.w + "%"));
+
+    $("#gbpQa").innerHTML = g.questions.map(q => `
+      <div class="qa">
+        <span class="qa__icon ${q.answered ? "is-done" : "is-open"}">
+          <svg><use href="#i-${q.answered ? "check" : "alert"}"></use></svg>
+        </span>
+        <div>
+          <b>${q.q}</b>
+          <span>${q.when}</span>
+        </div>
+      </div>`).join("");
+
+    window.__bindTips($("#gbpDist"));
+  }
+
+  /* ================================================= AI — extended cards */
+  function renderAiExtra() {
+    const ai = DEMO.aiVisibility;
+
+    window.Charts.lineChart($("#aiTrend"), {
+      labels: ai.trend.labels,
+      height: 230,
+      unit: "%",
+      ariaLabel: "AI citation rate by month",
+      series: [{ name: "Citation rate", values: ai.trend.values, color: cssVar("--series-1"), fill: true }]
+    });
+
+    $("#aiPrompts").innerHTML = ai.prompts.map(p => `
+      <tr>
+        <td class="kw">${p.prompt}</td>
+        <td>
+          <span class="pill ${p.cited ? "pill--good" : "pill--warn"}">
+            <svg><use href="#i-${p.cited ? "check" : "alert"}"></use></svg>
+            ${p.cited ? "Cited" : "Not cited"}
+          </span>
+        </td>
+        <td class="num">${p.rank ? `<span class="rank rank--top">${p.rank}</span>` : "—"}</td>
+        <td style="color:var(--text-muted)">${p.source}</td>
+      </tr>`).join("");
+
+    $("#aiDrivers").innerHTML = ai.drivers.map((d, i) => `
+      <div class="hbar" data-tip="<strong>${d.label}</strong>${d.note}">
+        <span class="hbar__name" style="width:150px">${d.label}</span>
+        <span class="hbar__track">
+          <span class="hbar__fill" data-w="${d.weight}"
+                style="background:${i >= ai.drivers.length - 2 ? cssVar("--demph") : cssVar("--series-1")}"></span>
+        </span>
+        <span class="hbar__val">${d.weight}</span>
+      </div>`).join("");
+    requestAnimationFrame(() =>
+      $$("#aiDrivers .hbar__fill").forEach(f => f.style.width = f.dataset.w + "%"));
+
+    window.__bindTips($("#aiDrivers"));
+  }
+
+  /* ============================================ ACTION PLAN — extended */
+  function renderActionsExtra() {
+    $("#roadmap").innerHTML = DEMO.roadmap.map(p => `
+      <div class="phase ${p.status === "active" ? "is-active" : ""}">
+        <div class="phase__head">
+          <span class="phase__dot"></span>
+          <b>${p.phase}</b>
+          <span class="pill ${p.status === "active" ? "pill--good" : "pill--info"}">
+            ${p.status === "active" ? "In progress" : "Queued"}
+          </span>
+        </div>
+        <ul class="phase__list">
+          ${p.items.map(i => `<li>${i}</li>`).join("")}
+        </ul>
+      </div>`).join("");
+
+    $("#completed").innerHTML = DEMO.completedActions.map(c => `
+      <div class="feeditem">
+        <span class="feedicon feedicon--done"><svg><use href="#i-check"></use></svg></span>
+        <span class="feedbody">
+          <b>${c.title}</b>
+          <span style="color:var(--good);font-weight:600">${c.impact}</span>
+        </span>
+        <span class="feedtime">${c.when}</span>
+      </div>`).join("");
+  }
+
   /* ============================================================= EXPORT */
   window.Modules = {
     init(onRankingsChange) {
@@ -415,6 +544,9 @@
     renderLocalDominator,
     renderLdBars,
     renderGa4,
+    renderGbpExtra,
+    renderAiExtra,
+    renderActionsExtra,
     state
   };
 })();

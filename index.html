@@ -643,6 +643,61 @@
             <div class="card__body" id="gbpReviews"></div>
           </div>
         </div>
+
+        <div class="grid grid--main mt grid--top">
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Recent reviews
+                    <span class="info" data-tip="The newest published reviews on the profile. Replying within 24 hours is a ranking signal and recovers roughly a third of unhappy customers.">?</span>
+                  </h3>
+                  <p>Latest customer feedback and reply status</p>
+                </div>
+                <button class="btn btn--ghost btn--sm" data-toast="Review manager would open here."><svg><use href="#i-star"></use></svg> Manage</button>
+              </div>
+              <div class="card__body" id="gbpRecent"></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Total profile interactions
+                    <span class="info" data-tip="Every call, direction request, website click and message, combined into one monthly figure.">?</span>
+                  </h3>
+                  <p>Calls, directions, clicks and messages combined</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="gbpChart"></div></div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Rating distribution
+                    <span class="info" data-tip="How the reviews break down by star rating. A handful of low ratings barely moves the average once volume is high — which is why volume matters more than chasing a perfect score.">?</span>
+                  </h3>
+                  <p>All 142 published reviews</p>
+                </div>
+              </div>
+              <div class="card__body" id="gbpDist"></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Questions &amp; answers
+                    <span class="info" data-tip="Questions the public asked on the profile. Unanswered questions sit publicly on the listing — anyone can answer them, including a competitor.">?</span>
+                  </h3>
+                  <p>Public Q&amp;A on the listing</p>
+                </div>
+              </div>
+              <div class="card__body" id="gbpQa"></div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ========================================================= AI -->
@@ -666,6 +721,71 @@
               Overall citation rate — the share of tracked prompts where an AI assistant named Americana Fence in its answer. Up from 11% at onboarding.
             </p>
             <div id="aiBodyFull"></div>
+          </div>
+        </div>
+
+        <div class="grid grid--main mt grid--top">
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Citation rate over time
+                    <span class="info" data-tip="Share of the 120 tracked prompts where an AI assistant named this business, measured weekly and rolled up by month.">?</span>
+                  </h3>
+                  <p>Monthly trend since onboarding</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="aiTrend"></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Tracked prompts
+                    <span class="info" data-tip="A sample of the buying-intent questions we re-run weekly. A miss is a specific, fixable content gap — not a mystery.">?</span>
+                  </h3>
+                  <p>Sample of the 120-prompt set and the current result</p>
+                </div>
+                <button class="btn btn--ghost btn--sm" data-toast="Exporting full prompt set…"><svg><use href="#i-dl"></use></svg> Full set</button>
+              </div>
+              <div class="card__body">
+                <div class="tablewrap">
+                  <table class="data">
+                    <thead><tr><th>Prompt</th><th>Result</th><th class="num">Position</th><th>Assistant</th></tr></thead>
+                    <tbody id="aiPrompts"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>What drives the score
+                    <span class="info" data-tip="The signals AI assistants weigh when deciding which local business to name. Scored 0–100 on current strength — the lowest bars are where the next gains are.">?</span>
+                  </h3>
+                  <p>Current strength on each signal</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="aiDrivers"></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head"><div class="grow"><h3>Why this matters</h3></div></div>
+              <div class="card__body">
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">
+                  A growing share of people never see a list of ten blue links. They ask an assistant for a recommendation and act on the two or three names it gives back.
+                </p>
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-top:11px">
+                  Americana is named in <b style="color:var(--text-primary)">34%</b> of tracked buying prompts, up from 11% at onboarding. The misses cluster around <b style="color:var(--text-primary)">commercial work</b> and <b style="color:var(--text-primary)">comparison questions</b> — both content gaps already on the action plan.
+                </p>
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-top:11px">
+                  Almost no local competitor is measuring this yet.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -743,6 +863,36 @@
             <button class="btn btn--primary btn--sm" data-toast="A call would be booked with your strategist."><svg><use href="#i-calendar"></use></svg> Discuss with strategist</button>
           </div>
           <div class="card__body"><div id="recs"></div></div>
+        </div>
+
+        <div class="grid grid--main mt grid--top">
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>90-day roadmap
+                    <span class="info" data-tip="How the open items are sequenced. Each phase builds on the last — the quick technical wins come first so the content work lands on a healthy site.">?</span>
+                  </h3>
+                  <p>Sequenced delivery plan</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="roadmap"></div></div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Already delivered
+                    <span class="info" data-tip="Completed items from previous cycles, with the measured result where one is attributable.">?</span>
+                  </h3>
+                  <p>Shipped items and their measured result</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="completed"></div></div>
+            </div>
+          </div>
         </div>
       </section>
 
