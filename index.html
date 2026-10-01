@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Portal — Makarios Marketing</title>
+<meta name="description" content="Makarios Marketing client intelligence dashboard — live SEO, local ranking and lead performance for every client.">
+<meta name="theme-color" content="#0f5a34">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f5a34'/%3E%3Cpath d='M8 21V11l8 7 8-7v10' stroke='%239fe29f' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<!-- ======================================================= ICON SPRITE -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <symbol id="i-logo" viewBox="0 0 24 24"><path d="M4 19V7l8 7 8-7v12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="m20 20-3.6-3.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 9.5 4.6 4h14.8L21 9.5M3 9.5h18M3 9.5v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-10M3 9.5a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.6 20a6.4 6.4 0 0 1 12.8 0M17 5.3a3.4 3.4 0 0 1 0 6.6M18.4 20a6.4 6.4 0 0 0-2.3-4.9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a4.5 4.5 0 0 0 6.6.5l2.6-2.6a4.6 4.6 0 0 0-6.5-6.5L11.4 5.8M14 11a4.5 4.5 0 0 0-6.6-.5l-2.6 2.6a4.6 4.6 0 0 0 6.5 6.5l1.3-1.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.2 13.9 9l5.8 1.9-5.8 1.9L12 18.6 10.1 12.8 4.3 10.9 10.1 9Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M18.5 16.4 19.3 19l2.6.8-2.6.8-.8 2.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".7"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M8.6 13h6.8M8.6 16.6h4.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></symbol>
+  <symbol id="i-cursor" viewBox="0 0 24 24"><path d="m5 3 6.4 16.4 2.2-6.8 6.8-2.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.2 12S5.8 5.5 12 5.5 21.8 12 21.8 12 18.2 18.5 12 18.5 2.2 12 2.2 12Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.3 3.5h3l1.6 4-2 1.3a12 12 0 0 0 5.4 5.4l1.3-2 4 1.6v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.3 5.7a2 2 0 0 1 2-2.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="m3 17 5.5-5.5 3.5 3.5L21 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.5 6H21v5.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3.5 13h4l1.5 2.6h6L16.5 13h4M3.5 13 6 5.2A2 2 0 0 1 7.9 4h8.2a2 2 0 0 1 1.9 1.2L20.5 13v5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5m0 0-6 6m6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14m0 0 6-6m-6 6-6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8.6a6 6 0 1 0-12 0c0 6-2.4 7.4-2.4 7.4h16.8S18 14.6 18 8.6ZM13.7 20a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 2.6v2.2M12 19.2v2.2M4.3 4.3l1.6 1.6M18.1 18.1l1.6 1.6M2.6 12h2.2M19.2 12h2.2M4.3 19.7l1.6-1.6M18.1 5.9l1.6-1.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.6 20.2a7.4 7.4 0 0 1 14.8 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.3 14.6a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a1.9 1.9 0 1 1-3.8 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0-1.1-2.7h-.3a1.9 1.9 0 1 1 0-3.8h.2a1.6 1.6 0 0 0 1.1-2.8l-.1-.1A1.9 1.9 0 1 1 7.4 4.4l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.3a1.9 1.9 0 1 1 3.8 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.3a1.9 1.9 0 1 1 0 3.8h-.2a1.6 1.6 0 0 0-1.5 1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9.4 20H5.6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3.8M15.6 16.4 20 12l-4.4-4.4M20 12H9.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3.6v11.2m0 0 4.2-4.2M12 14.8l-4.2-4.2M4.4 18.4v1a2 2 0 0 0 2 2h11.2a2 2 0 0 0 2-2v-1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.6 12.6 4.8 4.8L19.4 7.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.4 2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.9-5.4 2.9 1-6L3.2 9.8l6.1-.9Z" fill="currentColor"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.4 12h17.2M12 3.4a14 14 0 0 1 0 17.2 14 14 0 0 1 0-17.2Z" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="m3.4 6.6 5.8-2.4 5.6 2.4 5.8-2.4v13.2l-5.8 2.4-5.6-2.4-5.8 2.4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.2 4.2v15.2M14.8 6.6v15.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.6" y="10.4" width="14.8" height="10.2" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.4V7.6a4 4 0 0 1 8 0v2.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m3.6 6.6 8.4 6 8.4-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.2 20 6v6c0 4.6-3.3 7.9-8 9.4-4.7-1.5-8-4.8-8-9.4V6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2.2 2.2L15.4 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.2V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.6" y="5" width="16.8" height="16" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.6 9.6h16.8M8.4 3v4M15.6 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.2 2.6 20h18.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.2M12 17.2h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</defs>
+</svg>
+
+<!-- ============================================================= LOGIN -->
+<div class="login" id="login">
+  <div class="login__brandside">
+    <div style="display:flex;align-items:center;gap:11px">
+      <span class="logomark"><svg><use href="#i-logo"></use></svg></span>
+      <div>
+        <b style="font-size:15px;letter-spacing:-.02em">Makarios Marketing</b>
+        <span style="display:block;font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.09em;text-transform:uppercase">Client Intelligence</span>
+      </div>
+    </div>
+
+    <div class="login__tagline">
+      <h2>Every ranking, call and lead — in one place.</h2>
+      <p>Your live SEO performance, local map coverage and competitor position, updated daily from Google Search Console, Analytics, Business Profile and Local Dominator.</p>
+      <div class="login__proof">
+        <div><strong>+31.7%</strong><span>Calls this quarter</span></div>
+        <div><strong>34</strong><span>Map pack keywords</span></div>
+        <div><strong>24/7</strong><span>Live reporting</span></div>
+      </div>
+    </div>
+
+    <p style="font-size:11.5px;color:rgba(255,255,255,.4)">© 2026 Makarios Marketing. All rights reserved.</p>
+  </div>
+
+  <div class="login__formside">
+    <form class="login__form" id="loginForm" novalidate>
+      <h1>Welcome back</h1>
+      <p class="sub">Sign in to your performance dashboard.</p>
+
+      <div class="field">
+        <label for="email">Email address</label>
+        <div class="field__wrap">
+          <svg><use href="#i-mail"></use></svg>
+          <input type="email" id="email" value="mark@americanafence.com" autocomplete="username" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="field__wrap">
+          <svg><use href="#i-lock"></use></svg>
+          <input type="password" id="password" value="demo1234" autocomplete="current-password" required>
+        </div>
+      </div>
+
+      <div class="login__row">
+        <label><input type="checkbox" checked> Keep me signed in</label>
+        <a href="#" onclick="return false">Forgot password?</a>
+      </div>
+
+      <button class="btn btn--primary btn--block" type="submit" id="loginBtn">
+        <span>Sign in to dashboard</span>
+      </button>
+
+      <div class="login__hint">
+        Demo mode — press <code>Sign in</code> with the pre-filled credentials.
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =============================================================== APP -->
+<div class="app" id="app" hidden>
+
+  <!-- --------------------------------------------------------- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <span class="logomark"><svg><use href="#i-logo"></use></svg></span>
+      <div>
+        <b>Makarios</b>
+        <span>Client Portal</span>
+      </div>
+    </div>
+
+    <!-- Client switcher -->
+    <div class="clientcard" id="clientCard" data-tip="Agency view — switch between the accounts you have access to. Clients see only their own brand here.">
+      <div class="clientcard__row">
+        <span class="clientlogo" id="clientLogo">AF</span>
+        <span class="clientcard__meta">
+          <b id="clientName">Americana Fence</b>
+          <span id="clientPlan">Local SEO — Growth</span>
+        </span>
+        <svg class="clientcard__chev"><use href="#i-chev"></use></svg>
+      </div>
+      <div class="clientcard__list"><div id="clientList"></div></div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <p class="nav__label">Performance</p>
+      <button class="nav__item is-active" data-view="overview"><svg><use href="#i-grid"></use></svg> Overview</button>
+      <button class="nav__item" data-view="rankings"><svg><use href="#i-search"></use></svg> Search Rankings <span class="nav__badge">34</span></button>
+      <button class="nav__item" data-view="local"><svg><use href="#i-pin"></use></svg> Local Map Grid</button>
+      <button class="nav__item" data-view="gbp"><svg><use href="#i-store"></use></svg> Business Profile</button>
+      <button class="nav__item" data-view="ai"><svg><use href="#i-spark"></use></svg> AI Visibility <span class="nav__badge">New</span></button>
+
+      <p class="nav__label">Intelligence</p>
+      <button class="nav__item" data-view="competitors"><svg><use href="#i-users"></use></svg> Competitors</button>
+      <button class="nav__item" data-view="backlinks"><svg><use href="#i-link"></use></svg> Backlinks</button>
+      <button class="nav__item" data-view="actions"><svg><use href="#i-target"></use></svg> Action Plan <span class="nav__badge">5</span></button>
+
+      <p class="nav__label">Account</p>
+      <button class="nav__item" data-view="reports"><svg><use href="#i-doc"></use></svg> Reports <span class="nav__badge nav__badge--quiet">5</span></button>
+    </nav>
+
+    <div class="sidebar__foot">
+      <div class="health" data-tip="A single 0–100 score blending rankings, local coverage, profile completeness, backlink strength and technical health. Recalculated nightly.">
+        <div class="health__top">
+          <span>SEO Health Score</span>
+          <b id="healthVal">78</b>
+        </div>
+        <div class="health__track"><div class="health__fill" id="healthFill"></div></div>
+        <p class="health__note">Up 14 points since onboarding. Next milestone: 85.</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ------------------------------------------------------------ MAIN -->
+  <div class="main">
+
+    <header class="topbar">
+      <button class="iconbtn burger" id="burger" aria-label="Open navigation"><svg><use href="#i-menu"></use></svg></button>
+
+      <div class="topbar__title">
+        <h1 id="viewTitle">Overview</h1>
+        <p id="viewSub">Americana Iron Works &amp; Fence · Last 3 months</p>
+      </div>
+
+      <div class="topbar__spacer"></div>
+
+      <div class="search">
+        <svg><use href="#i-search"></use></svg>
+        <input type="search" placeholder="Search keywords, pages…" aria-label="Search">
+        <kbd>⌘K</kbd>
+      </div>
+
+      <button class="iconbtn" id="themeBtn" data-tip="Switch between light and dark appearance.">
+        <svg id="themeIcon"><use href="#i-moon"></use></svg>
+      </button>
+
+      <button class="iconbtn" id="bellBtn" data-tip="3 new notifications — 1 ranking alert, 2 completed tasks.">
+        <svg><use href="#i-bell"></use></svg>
+        <span class="iconbtn__dot"></span>
+      </button>
+
+      <!-- Profile -->
+      <div class="profile" id="profile">
+        <button class="profile__btn" id="profileBtn" aria-haspopup="menu" aria-expanded="false">
+          <span class="avatar" id="avatar">MT</span>
+          <span class="profile__name">
+            <b id="userName">Mark Thompson</b>
+            <span id="userRole">Owner</span>
+          </span>
+          <svg><use href="#i-chev"></use></svg>
+        </button>
+
+        <div class="menu" role="menu">
+          <div class="menu__head">
+            <span class="avatar avatar--lg" id="avatarLg">MT</span>
+            <div>
+              <b id="menuName">Mark Thompson</b>
+              <span id="menuEmail">mark@americanafence.com</span>
+              <span class="menu__role" id="menuRole">Owner</span>
+            </div>
+          </div>
+
+          <button class="menu__item" role="menuitem" data-toast="Profile settings would open here."><svg><use href="#i-user"></use></svg> Profile &amp; details</button>
+          <button class="menu__item" role="menuitem" data-toast="Notification preferences would open here."><svg><use href="#i-bell"></use></svg> Notifications</button>
+          <button class="menu__item" role="menuitem" data-toast="Connected accounts: GSC, GA4, GBP, Local Dominator."><svg><use href="#i-shield"></use></svg> Connected data sources</button>
+          <button class="menu__item" role="menuitem" data-toast="Account settings would open here."><svg><use href="#i-gear"></use></svg> Account settings</button>
+
+          <div class="menu__sep"></div>
+
+          <button class="menu__item" role="menuitem" data-toast="A call would be booked with your strategist."><svg><use href="#i-calendar"></use></svg> Book a strategy call</button>
+
+          <div class="menu__sep"></div>
+
+          <button class="menu__item menu__item--danger" role="menuitem" id="logoutBtn"><svg><use href="#i-logout"></use></svg> Sign out <span class="menu__kbd">⇧⌘Q</span></button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- =================================================== OVERVIEW -->
+      <section class="view is-active" data-view="overview">
+
+        <div class="hero anim-in" style="--d:0ms">
+          <div class="hero__text">
+            <h2>Good morning, Mark 👋</h2>
+            <p>Organic clicks are up <em>18.4%</em> and phone calls up <em>31.7%</em> against the previous quarter. You now hold <em>34 map pack keywords</em> — up from 24. One critical item needs attention: your brand term is losing clicks on Bing.</p>
+          </div>
+          <div class="hero__actions">
+            <button class="btn btn--primary" data-toast="September 2026 SEO Report — download starting…"><svg><use href="#i-dl"></use></svg> September report</button>
+            <button class="btn btn--ghost" data-view-jump="actions"><svg><use href="#i-target"></use></svg> View action plan</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="segmented" id="rangeSeg"></div>
+          <span class="chip chip--live"><i></i> Live · synced 14 min ago</span>
+          <span class="chip" data-tip="Data sources feeding this dashboard. Each connects by OAuth and refreshes every 24 hours.">4 sources connected</span>
+          <div style="flex:1"></div>
+          <button class="btn btn--ghost btn--sm" data-toast="Exporting dashboard to PDF…"><svg><use href="#i-dl"></use></svg> Export</button>
+        </div>
+
+        <div class="grid grid--kpi" id="kpiGrid"></div>
+
+        <div class="grid grid--main mt">
+          <div class="stack">
+
+            <div class="card anim-in" style="--d:120ms">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Organic clicks over time
+                    <span class="info" data-tip="Clicks from Google organic search, compared against the same number of days immediately before this period. Both lines use the same scale — so the gap between them is the real gain.">?</span>
+                  </h3>
+                  <p>Current period vs. previous period</p>
+                </div>
+                <button class="btn btn--ghost btn--sm" data-table-toggle="trafficTable">Table view</button>
+              </div>
+              <div class="card__body">
+                <div class="legend">
+                  <span class="legend__item"><i class="legend__swatch legend__swatch--line" style="background:var(--series-1)"></i> This period</span>
+                  <span class="legend__item"><i class="legend__swatch legend__swatch--line" style="background:var(--series-muted)"></i> Previous period</span>
+                </div>
+                <div id="trafficChart"></div>
+                <div class="tableview" id="trafficTable"></div>
+              </div>
+            </div>
+
+            <div class="card anim-in" style="--d:200ms">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Keyword rankings
+                    <span class="info" data-tip="Your position in Google for each tracked keyword, and how far it has moved since the start of the period. Position 1–3 wins the majority of clicks; 1–10 is page one.">?</span>
+                  </h3>
+                  <p>Top 10 tracked keywords by search volume</p>
+                </div>
+                <button class="btn btn--ghost btn--sm" data-view-jump="rankings">See all 34</button>
+              </div>
+              <div class="card__body">
+                <div class="tablewrap">
+                  <table class="data">
+                    <thead>
+                      <tr>
+                        <th>Keyword</th>
+                        <th class="num">Volume</th>
+                        <th class="num">Position</th>
+                        <th class="num">Change</th>
+                        <th>Intent</th>
+                      </tr>
+                    </thead>
+                    <tbody id="kwBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="card anim-in" style="--d:280ms">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Competitive position
+                    <span class="info" data-tip="Each competitor scored 0–100 on five dimensions that decide local rankings. Your bars are labelled directly — taller is stronger.">?</span>
+                  </h3>
+                  <p>Americana Fence vs. the three closest local competitors</p>
+                </div>
+              </div>
+              <div class="card__body">
+                <div class="legend" id="compLegend"></div>
+                <div id="compChart"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- right rail -->
+          <div class="stack">
+
+            <div class="card anim-in" style="--d:160ms">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Local map coverage
+                    <span class="info" data-tip="A 7×7 grid of sample points around the business. Each square shows your Google Maps rank when someone searches from that exact spot. Darker green = better. The ringed square is the shop itself.">?</span>
+                  </h3>
+                  <p id="geoKw">“wrought iron fence installation” · 5 mi radius</p>
+                </div>
+              </div>
+              <div class="card__body">
+                <div class="geo" id="geoGrid"></div>
+                <div class="geoscale">
+                  <span>Rank 1</span>
+                  <span class="geoscale__ramp"></span>
+                  <span>20+</span>
+                </div>
+                <div class="geostats">
+                  <div data-tip="Average Google Maps position across all 49 sample points.">
+                    <b id="geoAvg">6.9</b><span>Avg. rank <span style="color:var(--good);font-weight:650">↑ 4.3</span></span>
+                  </div>
+                  <div data-tip="Share of sample points where the business ranks in the top 3 — the Google map pack.">
+                    <b id="geoTop3">24%</b><span>Top-3 share <span style="color:var(--good);font-weight:650">↑ 16</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card anim-in" style="--d:240ms">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>AI search visibility
+                    <span class="info" data-tip="How often the business is named in AI-generated answers across a fixed set of 120 buying-intent prompts. This is the fastest-growing discovery channel and most competitors are not tracking it yet.">?</span>
+                  </h3>
+                  <p>Citation rate across 120 tracked prompts</p>
+                </div>
+                <span class="pill pill--good"><svg><use href="#i-up"></use></svg> +23</span>
+              </div>
+              <div class="card__body" id="aiBody"></div>
+            </div>
+
+            <div class="card anim-in" style="--d:320ms">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Work completed</h3>
+                  <p>What your team shipped this period</p>
+                </div>
+              </div>
+              <div class="card__body"><div class="feed" id="feed"></div></div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== RANKINGS -->
+      <section class="view" data-view="rankings">
+        <div class="grid grid--kpi" id="rankKpis"></div>
+        <div class="card mt">
+          <div class="card__head">
+            <div class="grow">
+              <h3>All tracked keywords</h3>
+              <p>34 keywords · ranked by monthly search volume</p>
+            </div>
+            <button class="btn btn--ghost btn--sm" data-toast="Exporting keyword data to CSV…"><svg><use href="#i-dl"></use></svg> Export CSV</button>
+          </div>
+          <div class="card__body">
+            <div class="tablewrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Keyword</th><th class="num">Volume</th><th class="num">Position</th>
+                    <th class="num">Change</th><th>Landing page</th><th>Buyer stage</th>
+                  </tr>
+                </thead>
+                <tbody id="kwBodyFull"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================== LOCAL -->
+      <section class="view" data-view="local">
+        <div class="grid grid--2">
+          <div class="card">
+            <div class="card__head">
+              <div class="grow">
+                <h3>Local Dominator grid
+                  <span class="info" data-tip="Google Maps rankings sampled from 49 points across the service area. This is how visibility actually varies by neighbourhood — a single 'rank' number hides it.">?</span>
+                </h3>
+                <p id="geoKw2">“wrought iron fence installation” · 5 mi radius</p>
+              </div>
+            </div>
+            <div class="card__body">
+              <div class="geo" id="geoGrid2"></div>
+              <div class="geoscale"><span>Rank 1</span><span class="geoscale__ramp"></span><span>20+</span></div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card">
+              <div class="card__head"><div class="grow"><h3>Coverage summary</h3><p>Across all 49 sample points</p></div></div>
+              <div class="card__body"><div id="localStats" class="grid grid--kpi"></div></div>
+            </div>
+            <div class="card">
+              <div class="card__head"><div class="grow"><h3>Why this matters</h3></div></div>
+              <div class="card__body">
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">
+                  Google shows different map results depending on where the searcher is standing. Ranking #1 at your shop but #15 three miles north means you are invisible to a large share of your market.
+                </p>
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-top:11px">
+                  Your strongest coverage is the <b style="color:var(--text-primary)">central and southern</b> service area. The <b style="color:var(--text-primary)">north-east corner</b> is the current weak point — that is where the next service-area page and citation push are aimed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== GBP -->
+      <section class="view" data-view="gbp">
+        <div class="grid grid--kpi" id="gbpKpis"></div>
+        <div class="grid grid--2 mt">
+          <div class="card">
+            <div class="card__head">
+              <div class="grow">
+                <h3>Customer actions
+                  <span class="info" data-tip="What people did after finding the business on Google Maps or Search. These are the clearest signal of real-world demand.">?</span>
+                </h3>
+                <p>Direct interactions from the Google Business Profile</p>
+              </div>
+            </div>
+            <div class="card__body"><div id="gbpActions"></div></div>
+          </div>
+          <div class="card">
+            <div class="card__head">
+              <div class="grow"><h3>Reviews &amp; reputation</h3><p>Rating, volume and response rate</p></div>
+            </div>
+            <div class="card__body" id="gbpReviews"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= AI -->
+      <section class="view" data-view="ai">
+        <div class="card">
+          <div class="card__head">
+            <div class="grow">
+              <h3>AI search visibility
+                <span class="info" data-tip="Tracks whether AI assistants name this business when someone asks a buying question in its category. Measured against a fixed set of 120 prompts, re-run weekly.">?</span>
+              </h3>
+              <p>Citation rate across ChatGPT, Google AI Overviews, Copilot and Perplexity</p>
+            </div>
+            <span class="chip chip--live"><i></i> Beta</span>
+          </div>
+          <div class="card__body">
+            <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:6px">
+              <span style="font-size:48px;font-weight:700;letter-spacing:-.04em;line-height:1" id="aiHero">34%</span>
+              <span class="delta delta--up"><svg><use href="#i-up"></use></svg> +23 pts</span>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:22px;max-width:62ch">
+              Overall citation rate — the share of tracked prompts where an AI assistant named Americana Fence in its answer. Up from 11% at onboarding.
+            </p>
+            <div id="aiBodyFull"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================ COMPETITORS -->
+      <section class="view" data-view="competitors">
+        <div class="card">
+          <div class="card__head">
+            <div class="grow">
+              <h3>Share of local voice
+                <span class="info" data-tip="Your slice of all local search visibility across the tracked keyword set, versus the three closest competitors and the long tail.">?</span>
+              </h3>
+              <p>Across 34 tracked keywords in the service area</p>
+            </div>
+          </div>
+          <div class="card__body">
+            <div class="tablewrap">
+              <table class="data">
+                <thead>
+                  <tr><th>Business</th><th>Share of voice</th><th class="num">Keywords</th><th class="num">Reviews</th><th class="num">Rating</th><th class="num">DA</th><th>Position</th></tr>
+                </thead>
+                <tbody id="compBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <div class="card__head">
+            <div class="grow"><h3>Dimension breakdown</h3><p>Scored 0–100 on the five factors that decide local rankings</p></div>
+          </div>
+          <div class="card__body">
+            <div class="legend" id="compLegend2"></div>
+            <div id="compChart2"></div>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <div class="card__head">
+            <div class="grow">
+              <h3>Intelligence modules</h3>
+              <p>Competitive audits running against this account</p>
+            </div>
+          </div>
+          <div class="card__body"><div class="grid grid--3" id="modules"></div></div>
+        </div>
+      </section>
+
+      <!-- ================================================== BACKLINKS -->
+      <section class="view" data-view="backlinks">
+        <div class="grid grid--kpi" id="blKpis"></div>
+        <div class="card mt">
+          <div class="card__head">
+            <div class="grow">
+              <h3>Referring domain growth
+                <span class="info" data-tip="The number of unique websites linking to this site. Google treats each distinct domain as a separate vote of confidence — 50 links from one site count far less than 50 sites linking once.">?</span>
+              </h3>
+              <p>Unique linking domains, month over month</p>
+            </div>
+          </div>
+          <div class="card__body"><div id="blChart"></div></div>
+        </div>
+      </section>
+
+      <!-- ===================================================== ACTIONS -->
+      <section class="view" data-view="actions">
+        <div class="card">
+          <div class="card__head">
+            <div class="grow">
+              <h3>Prioritised action plan
+                <span class="info" data-tip="Generated by the Makarios competitor-analysis suite and ranked by impact against effort. Your strategist works top-down.">?</span>
+              </h3>
+              <p>5 open items · ranked by impact vs. effort</p>
+            </div>
+            <button class="btn btn--primary btn--sm" data-toast="A call would be booked with your strategist."><svg><use href="#i-calendar"></use></svg> Discuss with strategist</button>
+          </div>
+          <div class="card__body"><div id="recs"></div></div>
+        </div>
+      </section>
+
+      <!-- ===================================================== REPORTS -->
+      <section class="view" data-view="reports">
+        <div class="card">
+          <div class="card__head">
+            <div class="grow"><h3>Reports &amp; documents</h3><p>Monthly performance reports, audits and strategy reviews</p></div>
+          </div>
+          <div class="card__body"><div id="reports"></div></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============================================================ CHROME -->
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toast" id="toast"><svg><use href="#i-check"></use></svg><span id="toastMsg"></span></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
