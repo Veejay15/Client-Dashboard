@@ -113,13 +113,18 @@ function sparkline(mount, values, opts = {}) {
 /*  Current vs previous period: same unit, ONE axis.                       */
 /* ====================================================================== */
 function lineChart(mount, cfg) {
-  const W = 760, H = 268;
+  // Size the viewBox to the measured container so 1 SVG unit == 1 CSS pixel.
+  // A fixed viewBox stretched with preserveAspectRatio="none" scales the axis
+  // TEXT along with the geometry, which is what makes charts look pixellated
+  // and oversized on a wide screen.
+  const W = Math.round(mount.clientWidth) || 760;
+  const H = cfg.height || 268;
   const m = { t: 16, r: 18, b: 32, l: 46 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
 
   const svg = el("svg", {
-    viewBox: `0 0 ${W} ${H}`, class: "chart", preserveAspectRatio: "none",
-    role: "img", "aria-label": cfg.ariaLabel || "Trend chart"
+    viewBox: `0 0 ${W} ${H}`, width: "100%", height: H,
+    class: "chart", role: "img", "aria-label": cfg.ariaLabel || "Trend chart"
   });
   svg.style.height = H + "px";
 
@@ -231,13 +236,14 @@ function lineChart(mount, cfg) {
 /*  Adjacent pairlist; 2px surface gap between bars; direct-labelled.      */
 /* ====================================================================== */
 function groupedBars(mount, cfg) {
-  const W = 760, H = 300;
+  const W = Math.round(mount.clientWidth) || 760;
+  const H = cfg.height || 300;
   const m = { t: 14, r: 14, b: 54, l: 40 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
 
   const svg = el("svg", {
-    viewBox: `0 0 ${W} ${H}`, class: "chart", preserveAspectRatio: "none",
-    role: "img", "aria-label": cfg.ariaLabel || "Grouped comparison"
+    viewBox: `0 0 ${W} ${H}`, width: "100%", height: H,
+    class: "chart", role: "img", "aria-label": cfg.ariaLabel || "Grouped comparison"
   });
   svg.style.height = H + "px";
 
@@ -256,7 +262,7 @@ function groupedBars(mount, cfg) {
   const gw = iw / groups;
   const n = cfg.entities.length;
   const GAP = 2;                                  // 2px surface gap
-  const bw = Math.max(6, (gw * 0.68 - GAP * (n - 1)) / n);
+  const bw = Math.max(6, Math.min(44, (gw * 0.68 - GAP * (n - 1)) / n));
 
   cfg.labels.forEach((lab, gi) => {
     const gx = m.l + gi * gw + (gw - (bw * n + GAP * (n - 1))) / 2;
@@ -313,29 +319,39 @@ function groupedBars(mount, cfg) {
 /*  COLUMN CHART — single-series magnitude over time (sequential hue).     */
 /* ====================================================================== */
 function columns(mount, cfg) {
-  const W = 420, H = 180;
-  const m = { t: 18, r: 10, b: 26, l: 34 };
+  const W = Math.round(mount.clientWidth) || 420;
+  const H = cfg.height || 240;
+  const m = { t: 18, r: 10, b: 28, l: 38 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
 
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", preserveAspectRatio: "none", role: "img", "aria-label": cfg.ariaLabel || "Column chart" });
+  const svg = el("svg", {
+    viewBox: `0 0 ${W} ${H}`, width: "100%", height: H,
+    class: "chart", role: "img", "aria-label": cfg.ariaLabel || "Column chart"
+  });
   svg.style.height = H + "px";
 
   const yMax = niceCeil(Math.max(...cfg.values) * 1.15);
   const y = v => m.t + ih - (v / yMax) * ih;
 
-  for (let i = 0; i <= 3; i++) {
-    const v = (yMax / 3) * i, yy = y(v);
+  // 4 divisions, so a "nice" max always yields whole-number ticks
+  // (3 divisions turns 200 into 0 / 66.7 / 133.3 / 200).
+  for (let i = 0; i <= 4; i++) {
+    const v = (yMax / 4) * i, yy = y(v);
     svg.append(el("line", { x1: m.l, x2: W - m.r, y1: yy, y2: yy, class: "grid-line" }));
     const t = el("text", { x: m.l - 7, y: yy + 3.5, class: "axis-text", "text-anchor": "end" });
-    t.textContent = Math.round(v);
+    t.textContent = fmt(Math.round(v), true);
     svg.append(t);
   }
 
+  // Cap the bar width — a 6-bar chart in a 1400px card would otherwise render
+  // 230px-wide slabs. Narrower bars are also the correct mark spec.
   const GAP = 2;
-  const bw = iw / cfg.values.length - GAP;
+  const slot = iw / cfg.values.length;
+  const bw = Math.min(slot - GAP, 72);
+  const lead = m.l + (slot - bw) / 2;
 
   cfg.values.forEach((v, i) => {
-    const bx = m.l + i * (bw + GAP);
+    const bx = lead + i * slot;
     const by = y(v);
     const bar = el("path", {
       d: barPath(bx, by, bw, m.t + ih - by),
@@ -349,7 +365,7 @@ function columns(mount, cfg) {
     bar.addEventListener("mouseleave", () => window.__tip.hide());
     svg.append(bar);
 
-    const t = el("text", { x: bx + bw / 2, y: H - 8, class: "axis-text", "text-anchor": "middle" });
+    const t = el("text", { x: bx + bw / 2, y: H - 9, class: "axis-text", "text-anchor": "middle" });
     t.textContent = cfg.labels[i];
     svg.append(t);
   });
@@ -357,8 +373,8 @@ function columns(mount, cfg) {
   /* Direct-label the final value only — never a number on every bar. */
   const last = cfg.values.length - 1;
   const lt = el("text", {
-    x: m.l + last * (bw + GAP) + bw / 2,
-    y: y(cfg.values[last]) - 6,
+    x: lead + last * slot + bw / 2,
+    y: y(cfg.values[last]) - 7,
     class: "axis-text", "text-anchor": "middle",
     style: "font-weight:700"
   });

@@ -1,0 +1,274 @@
+/* ==========================================================================
+   Makarios Client Dashboard — extended components
+   Date range + comparison controls, Local Dominator maps, GA4 analytics.
+   Loaded after styles.css; inherits all tokens from it.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   DATE RANGE + COMPARISON (GSC-style)
+   -------------------------------------------------------------------------- */
+.daterow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.daterow__vs { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+
+.dropdown { position: relative; }
+.dropdown__btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .18s var(--ease), box-shadow .18s var(--ease),
+              transform .16s var(--ease-spring);
+}
+.dropdown__btn:hover {
+  border-color: var(--brand-400);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.dropdown__btn > svg:first-child { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+.dropdown__btn b { display: block; font-size: 13px; font-weight: 620; color: var(--text-primary); }
+.dropdown__btn > span > span { font-size: 11.5px; color: var(--text-muted); }
+.dropdown__chev { width: 14px; height: 14px; color: var(--text-muted); flex: none; transition: transform .22s var(--ease); }
+.dropdown.is-open .dropdown__chev { transform: rotate(180deg); }
+
+.cmpswatch {
+  width: 15px; height: 3px; flex: none;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, var(--series-muted) 0 5px, transparent 5px 9px);
+}
+
+.dropdown__menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 70;
+  min-width: 248px;
+  padding: 6px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  opacity: 0; visibility: hidden;
+  transform: translateY(-6px) scale(.98);
+  transform-origin: top left;
+  transition: opacity .18s var(--ease), transform .18s var(--ease-out), visibility .18s;
+}
+.dropdown.is-open .dropdown__menu { opacity: 1; visibility: visible; transform: none; }
+
+.dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color .15s var(--ease), color .15s var(--ease), padding-left .15s var(--ease);
+}
+.dropdown__item:hover { background: var(--surface-2); color: var(--text-primary); padding-left: 13px; }
+.dropdown__item.is-active { color: var(--brand-600); font-weight: 620; background: var(--brand-50); }
+:root[data-theme="dark"] .dropdown__item.is-active { color: var(--brand-200); background: rgba(43,162,74,.14); }
+.dropdown__item em { font-style: normal; font-size: 11px; color: var(--text-muted); margin-left: auto; padding-left: 12px; }
+
+.customrange {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .3s var(--ease-out), margin-top .3s var(--ease);
+}
+.customrange.is-open { grid-template-rows: 1fr; margin-top: 14px; }
+.customrange > .customrange__inner { overflow: hidden; }
+.customrange__inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+.customrange label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.customrange input[type="date"] {
+  padding: 8px 11px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+.customrange input[type="date"]:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px rgba(43, 162, 74, .16);
+}
+.customrange__note { font-size: 12px; color: var(--text-muted); padding-bottom: 9px; }
+
+/* Stacked current/comparison cell in the keyword table */
+.cmp { display: flex; flex-direction: column; gap: 1px; line-height: 1.25; }
+.cmp b { font-size: 13px; font-weight: 620; color: var(--text-primary); }
+.cmp span { font-size: 11px; color: var(--text-muted); }
+
+/* --------------------------------------------------------------------------
+   LOCAL DOMINATOR MAPS
+   -------------------------------------------------------------------------- */
+.kwpicker { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+.kwpicker button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition: background-color .18s var(--ease), color .18s var(--ease),
+              border-color .18s var(--ease), transform .16s var(--ease-spring);
+}
+.kwpicker button:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.kwpicker button.is-active {
+  background: var(--brand-600);
+  color: #fff;
+  font-weight: 620;
+  box-shadow: var(--shadow-brand);
+}
+.kwpicker i {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--r-full);
+  background: rgba(0, 0, 0, .07);
+}
+.kwpicker button.is-active i { background: rgba(255, 255, 255, .22); }
+:root[data-theme="dark"] .kwpicker i { background: rgba(255, 255, 255, .1); }
+
+.ldwrap { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 18px; align-items: start; }
+
+.ldmap {
+  margin: 0;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  position: relative;
+  min-height: 240px;
+}
+.ldmap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity .35s var(--ease);
+}
+.ldmap img.is-loaded { opacity: 1; }
+
+.ldstat {
+  padding: 13px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 10px;
+}
+.ldstat__label { font-size: 11.5px; color: var(--text-muted); font-weight: 550; }
+.ldstat__value { font-size: 27px; font-weight: 680; letter-spacing: -.035em; line-height: 1.15; color: var(--text-primary); }
+
+.ldbreak { display: grid; gap: 9px; }
+.ldbreak__row { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+.ldbreak__dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.ldbreak__name { color: var(--text-secondary); font-weight: 550; }
+.ldbreak__val { margin-left: auto; font-weight: 680; color: var(--text-primary); }
+
+/* Horizontal bar list — average rank per keyword */
+.hbar { display: flex; align-items: center; gap: 11px; padding: 9px 0; }
+.hbar__name { width: 196px; flex: none; font-size: 12.5px; color: var(--text-primary); font-weight: 550; }
+.hbar__track {
+  display: block;
+  flex: 1;
+  height: 9px;
+  background: var(--surface-2);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--grid);
+}
+.hbar__fill { display: block; height: 100%; width: 0; border-radius: var(--r-full); transition: width 1s var(--ease-out); }
+.hbar__val { width: 44px; flex: none; text-align: right; font-size: 12.5px; font-weight: 680; color: var(--text-primary); }
+
+/* --------------------------------------------------------------------------
+   GA4
+   -------------------------------------------------------------------------- */
+.stackbar {
+  display: flex;
+  height: 30px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  gap: 2px;                    /* 2px surface gap between segments */
+  margin-bottom: 16px;
+}
+.stackbar__seg {
+  height: 100%;
+  min-width: 2px;
+  cursor: default;
+  transition: opacity .18s var(--ease);
+}
+.stackbar__seg:first-child { border-radius: var(--r-sm) 0 0 var(--r-sm); }
+.stackbar__seg:last-child { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+.stackbar__seg:hover { opacity: .82; }
+
+.chanrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--grid);
+  font-size: 12.5px;
+}
+.chanrow:last-child { border-bottom: none; }
+.chanrow__dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.chanrow__name { flex: 1; color: var(--text-primary); font-weight: 550; }
+.chanrow__val { font-weight: 680; color: var(--text-primary); }
+.chanrow__pct { width: 48px; text-align: right; color: var(--text-muted); font-size: 11.5px; }
+
+.donut { display: flex; align-items: center; gap: 20px; }
+.donut__chart { flex: none; }
+.donut__legend { flex: 1; display: grid; gap: 10px; }
+
+/* Columns size to their own content instead of stretching to the tallest
+   sibling — used where one column is much longer than the other. */
+.grid--top { align-items: start; }
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE
+   -------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .ldwrap { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .daterow { gap: 9px; }
+  .daterow__vs { display: none; }
+  .dropdown { width: 100%; }
+  .dropdown__btn { width: 100%; }
+  .hbar__name { width: 130px; }
+  .donut { flex-direction: column; align-items: flex-start; }
+}

@@ -11,9 +11,9 @@ const DEMO = {
 
   /* ---------------------------------------------------------------- account */
   user: {
-    name: "Mark Thompson",
-    initials: "MT",
-    email: "mark@americanafence.com",
+    name: "Jason Thompson",
+    initials: "JT",
+    email: "jason@americanafence.com",
     role: "Owner",
     lastLogin: "Today, 8:42 AM"
   },
@@ -111,12 +111,31 @@ const DEMO = {
     previous: [51, 53, 56, 54, 58, 61, 63, 66, 68, 71, 74, 79]
   },
 
+  /* ------------------------------------------------ Local Dominator maps
+     Real August 2026 Local Dominator captures for this account. Every stat
+     here is read off the capture itself, so the panel and the image always
+     agree. Replace `img` with a live render once the API is connected.     */
+  localDominator: {
+    business: "Americana Iron Works & Fence",
+    address: "939 W North Ave, Chicago, IL 60642",
+    captured: "August 2026",
+    tarp: 7.45,
+    keywords: [
+      { kw: "Chicago wrought iron gates",      img: "wrought-iron-gates",       avg: 2.59, high: 80, med: 20, low: 0,  competitors: 48 },
+      { kw: "metal fence installation Chicago",img: "metal-fence-installation", avg: 2.72, high: 75, med: 25, low: 0,  competitors: 55 },
+      { kw: "fence installation chicago",      img: "fence-installation",       avg: 3.67, high: 53, med: 47, low: 0,  competitors: 78 },
+      { kw: "fence repair chicago",            img: "fence-repair",             avg: 3.77, high: 62, med: 33, low: 5,  competitors: 77 },
+      { kw: "chicago fence company",           img: "fence-company",            avg: 5.85, high: 26, med: 51, low: 23, competitors: 47 },
+      { kw: "fence contractor chicago",        img: "fence-contractor",         avg: 5.96, high: 41, med: 40, low: 19, competitors: 53 }
+    ]
+  },
+
   /* ---------------------------------------------------- local grid rankings
      7x7 geo grid centred on the business. Values are the ranking position
      returned for the primary keyword at each lat/lng sample point.         */
   geoGrid: {
-    keyword: "wrought iron fence installation",
-    center: "Americana Iron Works & Fence — 1420 S Main St",
+    keyword: "fence installation chicago",
+    center: "Americana Iron Works & Fence — 939 W North Ave",
     radius: "5 mi",
     cells: [
       11, 9, 7, 6, 8, 12, 15,
@@ -134,18 +153,63 @@ const DEMO = {
   },
 
   /* -------------------------------------------------------------- keywords */
+  /* clicks / impressions / ctr are the current period; the `p` fields are the
+     same metrics for the comparison period, so the GSC-style compare view can
+     diff them without a second request shape. */
   keywords: [
-    { kw: "wrought iron fence installation", vol: 1300, pos: 3,  prev: 9,  url: "/wrought-iron-fences", intent: "Ready to hire" },
-    { kw: "iron fence company near me",      vol: 880,  pos: 2,  prev: 6,  url: "/", intent: "Ready to hire" },
-    { kw: "custom iron gates",               vol: 720,  pos: 5,  prev: 11, url: "/custom-gates", intent: "Ready to hire" },
-    { kw: "automatic driveway gates",        vol: 590,  pos: 7,  prev: 14, url: "/driveway-gates", intent: "Ready to hire" },
-    { kw: "ornamental fence contractor",     vol: 410,  pos: 4,  prev: 4,  url: "/services", intent: "Ready to hire" },
-    { kw: "security fence installation",     vol: 390,  pos: 11, prev: 19, url: "/security-fencing", intent: "Solution aware" },
-    { kw: "aluminum fence vs iron fence",    vol: 320,  pos: 6,  prev: 12, url: "/blog/aluminum-vs-iron", intent: "Solution aware" },
-    { kw: "iron fence repair",               vol: 260,  pos: 8,  prev: 7,  url: "/repairs", intent: "Ready to hire" },
-    { kw: "how much does an iron fence cost",vol: 1900, pos: 14, prev: 22, url: "/blog/iron-fence-cost", intent: "Problem aware" },
-    { kw: "commercial fencing contractor",   vol: 480,  pos: 16, prev: 16, url: "/commercial", intent: "Ready to hire" }
+    { kw: "fence installation chicago",       vol: 1300, pos: 3,  prev: 9,  clicks: 184, pClicks: 96,  impr: 9400, pImpr: 7100, url: "/fence-installation", intent: "Ready to hire" },
+    { kw: "chicago fence company",            vol: 880,  pos: 2,  prev: 6,  clicks: 151, pClicks: 88,  impr: 8100, pImpr: 6400, url: "/", intent: "Ready to hire" },
+    { kw: "Chicago wrought iron gates",       vol: 720,  pos: 5,  prev: 11, clicks: 118, pClicks: 54,  impr: 6900, pImpr: 4800, url: "/wrought-iron-gates", intent: "Ready to hire" },
+    { kw: "metal fence installation Chicago", vol: 590,  pos: 7,  prev: 14, clicks:  94, pClicks: 41,  impr: 5600, pImpr: 3900, url: "/metal-fencing", intent: "Ready to hire" },
+    { kw: "fence contractor chicago",         vol: 410,  pos: 4,  prev: 4,  clicks:  87, pClicks: 79,  impr: 4800, pImpr: 4500, url: "/services", intent: "Ready to hire" },
+    { kw: "fence repair chicago",             vol: 390,  pos: 11, prev: 19, clicks:  62, pClicks: 24,  impr: 4100, pImpr: 2600, url: "/fence-repair", intent: "Ready to hire" },
+    { kw: "fence painting chicago",           vol: 320,  pos: 6,  prev: 12, clicks:  48, pClicks: 21,  impr: 3300, pImpr: 2200, url: "/fence-painting", intent: "Solution aware" },
+    { kw: "fence installation hyde park",     vol: 260,  pos: 8,  prev: 7,  clicks:  39, pClicks: 42,  impr: 2700, pImpr: 2800, url: "/areas/hyde-park", intent: "Ready to hire" },
+    { kw: "how much does an iron fence cost", vol: 1900, pos: 14, prev: 22, clicks:  34, pClicks: 11,  impr: 7800, pImpr: 3100, url: "/blog/iron-fence-cost", intent: "Problem aware" },
+    { kw: "fence contractor north center",    vol: 480,  pos: 16, prev: 16, clicks:  21, pClicks: 19,  impr: 2400, pImpr: 2300, url: "/areas/north-center", intent: "Ready to hire" },
+    { kw: "residential iron fence chicago",   vol: 350,  pos: 9,  prev: 15, clicks:  44, pClicks: 18,  impr: 3100, pImpr: 2000, url: "/residential", intent: "Ready to hire" },
+    { kw: "fence installation buena park",    vol: 210,  pos: 12, prev: 18, clicks:  17, pClicks:  7,  impr: 1900, pImpr: 1300, url: "/areas/buena-park", intent: "Ready to hire" }
   ],
+
+  /* --------------------------------------------------------- GA4 analytics
+     Behaviour and acquisition — what people did once they landed.          */
+  ga4: {
+    kpis: [
+      { id: "sessions", label: "Sessions", value: 3847, delta: 21.3, spark: [1920,2040,2180,2260,2410,2580,2710,2880,3060,3240,3420,3610,3740,3847], icon: "users", source: "Google Analytics 4", tip: "A session is one visit to the website. One person can start several sessions across a month — this counts visits, not people." },
+      { id: "users", label: "Active Users", value: 2914, delta: 18.9, spark: [1510,1600,1690,1760,1870,1980,2080,2190,2320,2450,2580,2710,2840,2914], icon: "user", source: "Google Analytics 4", tip: "Unique people who visited at least once. Lower than sessions because repeat visitors are only counted once." },
+      { id: "engagement", label: "Engagement Rate", value: 64.2, decimals: 1, suffix: "%", delta: 9.4, spark: [52.1,53.4,54.8,55.9,57.2,58.4,59.1,60.3,61.2,62.0,62.8,63.4,63.9,64.2], icon: "spark", source: "Google Analytics 4", tip: "Share of sessions that lasted over 10 seconds, had a conversion, or viewed 2+ pages. GA4's replacement for bounce rate — higher is better." },
+      { id: "avgtime", label: "Avg. Engagement", value: 112, suffix: "s", delta: 14.7, spark: [78,81,84,86,89,92,95,98,101,104,107,109,111,112], icon: "clock", source: "Google Analytics 4", tip: "Average time a visitor actively spent on the site per session. Rising time usually means the content is answering the question people arrived with." },
+      { id: "convrate", label: "Conversion Rate", value: 3.8, decimals: 1, suffix: "%", delta: 26.7, spark: [2.1,2.2,2.3,2.4,2.6,2.7,2.9,3.0,3.2,3.3,3.5,3.6,3.7,3.8], icon: "target", source: "Google Analytics 4", tip: "Share of sessions that completed a quote request or call. This is the number that turns traffic into revenue — it matters more than raw session growth." },
+      { id: "newusers", label: "New Users", value: 2341, delta: 23.8, spark: [1180,1250,1320,1390,1470,1560,1650,1740,1850,1960,2070,2180,2280,2341], icon: "up", source: "Google Analytics 4", tip: "First-time visitors in this period. Healthy local SEO should keep this climbing — it means reach is expanding, not just the same people returning." }
+    ],
+    /* Acquisition channels — part-to-whole, so a single stacked bar. */
+    channels: [
+      { name: "Organic Search", sessions: 2418, pct: 62.9, delta: 28.4 },
+      { name: "Direct",         sessions: 684,  pct: 17.8, delta: 12.1 },
+      { name: "Google Maps",    sessions: 412,  pct: 10.7, delta: 34.2 },
+      { name: "Referral",       sessions: 201,  pct: 5.2,  delta: 8.6 },
+      { name: "Social",         sessions: 132,  pct: 3.4,  delta: -4.3 }
+    ],
+    devices: [
+      { name: "Mobile",  pct: 68.4, sessions: 2631 },
+      { name: "Desktop", pct: 26.1, sessions: 1004 },
+      { name: "Tablet",  pct: 5.5,  sessions: 212 }
+    ],
+    landingPages: [
+      { url: "/",                       sessions: 1142, rate: 4.2, time: 98 },
+      { url: "/fence-installation",     sessions: 684,  rate: 5.8, time: 142 },
+      { url: "/wrought-iron-gates",     sessions: 521,  rate: 6.1, time: 156 },
+      { url: "/fence-repair",           sessions: 398,  rate: 3.4, time: 104 },
+      { url: "/blog/iron-fence-cost",   sessions: 347,  rate: 1.2, time: 187 },
+      { url: "/metal-fencing",          sessions: 289,  rate: 4.9, time: 121 },
+      { url: "/areas/hyde-park",        sessions: 164,  rate: 3.1, time: 88 }
+    ],
+    /* Conversion events, same unit — one axis. */
+    events: {
+      labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+      values: [61, 72, 84, 97, 118, 147]
+    }
+  },
 
   /* ------------------------------------------------------- competitor set
      Share of local voice across the tracked keyword set.
@@ -288,5 +352,22 @@ const DEMO = {
     { id: "3m",  label: "3 months", active: true },
     { id: "6m",  label: "6 months" },
     { id: "12m", label: "12 months" }
+  ],
+
+  /* GSC-style date + comparison controls for the Search Rankings view. */
+  datePresets: [
+    { id: "7d",   label: "Last 7 days",    from: "2026-09-24", to: "2026-09-30" },
+    { id: "28d",  label: "Last 28 days",   from: "2026-09-03", to: "2026-09-30" },
+    { id: "3m",   label: "Last 3 months",  from: "2026-07-01", to: "2026-09-30", active: true },
+    { id: "6m",   label: "Last 6 months",  from: "2026-04-01", to: "2026-09-30" },
+    { id: "12m",  label: "Last 12 months", from: "2025-10-01", to: "2026-09-30" },
+    { id: "custom", label: "Custom range", from: "2026-07-01", to: "2026-09-30" }
+  ],
+
+  compareModes: [
+    { id: "none",  label: "No comparison" },
+    { id: "prev",  label: "Previous period", active: true, from: "2026-04-02", to: "2026-06-30" },
+    { id: "year",  label: "Same period last year", from: "2025-07-01", to: "2025-09-30" },
+    { id: "custom",label: "Custom", from: "2026-01-01", to: "2026-03-31" }
   ]
 };

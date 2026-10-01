@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700;750&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/components.css">
 </head>
 <body>
 
@@ -52,6 +53,7 @@
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.2 20 6v6c0 4.6-3.3 7.9-8 9.4-4.7-1.5-8-4.8-8-9.4V6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2.2 2.2L15.4 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.2V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.6" y="5" width="16.8" height="16" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.6 9.6h16.8M8.4 3v4M15.6 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3.6 20.4h16.8M6.6 20.4V11M11 20.4V5.6M15.4 20.4v-6.2M19.8 20.4V8.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.2 2.6 20h18.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.2M12 17.2h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </defs>
 </svg>
@@ -89,7 +91,7 @@
         <label for="email">Email address</label>
         <div class="field__wrap">
           <svg><use href="#i-mail"></use></svg>
-          <input type="email" id="email" value="mark@americanafence.com" autocomplete="username" required>
+          <input type="email" id="email" value="jason@americanafence.com" autocomplete="username" required>
         </div>
       </div>
 
@@ -148,6 +150,7 @@
       <button class="nav__item is-active" data-view="overview"><svg><use href="#i-grid"></use></svg> Overview</button>
       <button class="nav__item" data-view="rankings"><svg><use href="#i-search"></use></svg> Search Rankings <span class="nav__badge">34</span></button>
       <button class="nav__item" data-view="local"><svg><use href="#i-pin"></use></svg> Local Map Grid</button>
+      <button class="nav__item" data-view="ga4"><svg><use href="#i-chart"></use></svg> Website Analytics</button>
       <button class="nav__item" data-view="gbp"><svg><use href="#i-store"></use></svg> Business Profile</button>
       <button class="nav__item" data-view="ai"><svg><use href="#i-spark"></use></svg> AI Visibility <span class="nav__badge">New</span></button>
 
@@ -205,9 +208,9 @@
       <!-- Profile -->
       <div class="profile" id="profile">
         <button class="profile__btn" id="profileBtn" aria-haspopup="menu" aria-expanded="false">
-          <span class="avatar" id="avatar">MT</span>
+          <span class="avatar" id="avatar">JT</span>
           <span class="profile__name">
-            <b id="userName">Mark Thompson</b>
+            <b id="userName">Jason Thompson</b>
             <span id="userRole">Owner</span>
           </span>
           <svg><use href="#i-chev"></use></svg>
@@ -215,10 +218,10 @@
 
         <div class="menu" role="menu">
           <div class="menu__head">
-            <span class="avatar avatar--lg" id="avatarLg">MT</span>
+            <span class="avatar avatar--lg" id="avatarLg">JT</span>
             <div>
-              <b id="menuName">Mark Thompson</b>
-              <span id="menuEmail">mark@americanafence.com</span>
+              <b id="menuName">Jason Thompson</b>
+              <span id="menuEmail">jason@americanafence.com</span>
               <span class="menu__role" id="menuRole">Owner</span>
             </div>
           </div>
@@ -246,7 +249,7 @@
 
         <div class="hero anim-in" style="--d:0ms">
           <div class="hero__text">
-            <h2>Good morning, Mark 👋</h2>
+            <h2>Good morning, Jason 👋</h2>
             <p>Organic clicks are up <em>18.4%</em> and phone calls up <em>31.7%</em> against the previous quarter. You now hold <em>34 map pack keywords</em> — up from 24. One critical item needs attention: your brand term is losing clicks on Bing.</p>
           </div>
           <div class="hero__actions">
@@ -342,7 +345,7 @@
                   <h3>Local map coverage
                     <span class="info" data-tip="A 7×7 grid of sample points around the business. Each square shows your Google Maps rank when someone searches from that exact spot. Darker green = better. The ringed square is the shop itself.">?</span>
                   </h3>
-                  <p id="geoKw">“wrought iron fence installation” · 5 mi radius</p>
+                  <p id="geoKw">“fence installation chicago” · 5 mi radius</p>
                 </div>
               </div>
               <div class="card__body">
@@ -392,24 +395,85 @@
 
       <!-- =================================================== RANKINGS -->
       <section class="view" data-view="rankings">
+
+        <!-- GSC-style date + comparison bar -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card__body" style="padding:14px 18px">
+            <div class="daterow">
+              <div class="dropdown" id="dateDrop">
+                <button class="dropdown__btn" id="dateBtn">
+                  <svg><use href="#i-calendar"></use></svg>
+                  <span>
+                    <b id="dateLabel">Last 3 months</b>
+                    <span id="dateSpan">Jul 1 – Sep 30, 2026</span>
+                  </span>
+                  <svg class="dropdown__chev"><use href="#i-chev"></use></svg>
+                </button>
+                <div class="dropdown__menu" id="dateMenu"></div>
+              </div>
+
+              <span class="daterow__vs">compared to</span>
+
+              <div class="dropdown" id="compDrop">
+                <button class="dropdown__btn" id="compBtn">
+                  <span class="cmpswatch"></span>
+                  <span>
+                    <b id="compLabel">Previous period</b>
+                    <span id="compSpan">Apr 2 – Jun 30, 2026</span>
+                  </span>
+                  <svg class="dropdown__chev"><use href="#i-chev"></use></svg>
+                </button>
+                <div class="dropdown__menu" id="compMenu"></div>
+              </div>
+
+              <div style="flex:1"></div>
+              <button class="btn btn--ghost btn--sm" data-toast="Exporting keyword data to CSV…"><svg><use href="#i-dl"></use></svg> Export CSV</button>
+            </div>
+
+            <!-- Custom range pickers, revealed when "Custom range" is chosen -->
+            <div class="customrange" id="customRange">
+              <div class="customrange__inner">
+                <label>Start date <input type="date" id="dateFrom" value="2026-07-01"></label>
+                <label>End date <input type="date" id="dateTo" value="2026-09-30"></label>
+                <button class="btn btn--primary btn--sm" id="applyRange">Apply range</button>
+                <span class="customrange__note" id="rangeNote">92 days selected</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid--kpi" id="rankKpis"></div>
+
+        <div class="card mt">
+          <div class="card__head">
+            <div class="grow">
+              <h3>Clicks &amp; impressions
+                <span class="info" data-tip="Both periods are drawn on one scale so the gap between the lines is the real change. The dashed line is the comparison period.">?</span>
+              </h3>
+              <p id="rankChartSub">Current period vs. previous period</p>
+            </div>
+            <div class="segmented" id="metricSeg">
+              <button class="is-active" data-metric="clicks">Clicks</button>
+              <button data-metric="impressions">Impressions</button>
+            </div>
+          </div>
+          <div class="card__body">
+            <div class="legend" id="rankLegend"></div>
+            <div id="rankChart"></div>
+          </div>
+        </div>
+
         <div class="card mt">
           <div class="card__head">
             <div class="grow">
               <h3>All tracked keywords</h3>
-              <p>34 keywords · ranked by monthly search volume</p>
+              <p id="kwSub">34 keywords · showing comparison against the previous period</p>
             </div>
-            <button class="btn btn--ghost btn--sm" data-toast="Exporting keyword data to CSV…"><svg><use href="#i-dl"></use></svg> Export CSV</button>
           </div>
           <div class="card__body">
             <div class="tablewrap">
-              <table class="data">
-                <thead>
-                  <tr>
-                    <th>Keyword</th><th class="num">Volume</th><th class="num">Position</th>
-                    <th class="num">Change</th><th>Landing page</th><th>Buyer stage</th>
-                  </tr>
-                </thead>
+              <table class="data" id="kwTableFull">
+                <thead id="kwHeadFull"></thead>
                 <tbody id="kwBodyFull"></tbody>
               </table>
             </div>
@@ -419,36 +483,139 @@
 
       <!-- ====================================================== LOCAL -->
       <section class="view" data-view="local">
-        <div class="grid grid--2">
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card__head">
+            <div class="grow">
+              <h3>Local Dominator — live map captures
+                <span class="info" data-tip="Each capture samples your Google Maps rank from dozens of points across Chicago. A star is a top-3 placement; green is strong, amber mid, red weak. Pick a keyword to see its coverage.">?</span>
+              </h3>
+              <p id="ldMeta">Americana Iron Works &amp; Fence · 939 W North Ave, Chicago, IL 60642 · August 2026</p>
+            </div>
+            <span class="chip" data-tip="These are real Local Dominator captures. The live API connection is the next integration.">Static capture</span>
+          </div>
+          <div class="card__body">
+            <div class="kwpicker" id="ldPicker"></div>
+
+            <div class="ldwrap">
+              <figure class="ldmap">
+                <img id="ldImg" alt="Local Dominator map" loading="lazy">
+              </figure>
+
+              <div class="ldside" id="ldSide"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid--2 grid--top">
           <div class="card">
             <div class="card__head">
               <div class="grow">
-                <h3>Local Dominator grid
-                  <span class="info" data-tip="Google Maps rankings sampled from 49 points across the service area. This is how visibility actually varies by neighbourhood — a single 'rank' number hides it.">?</span>
+                <h3>Coverage by keyword
+                  <span class="info" data-tip="Average Google Maps rank for each tracked keyword across the whole sample area. Lower is better.">?</span>
                 </h3>
-                <p id="geoKw2">“wrought iron fence installation” · 5 mi radius</p>
+                <p>Average rank across all sample points · lower is better</p>
               </div>
             </div>
-            <div class="card__body">
-              <div class="geo" id="geoGrid2"></div>
-              <div class="geoscale"><span>Rank 1</span><span class="geoscale__ramp"></span><span>20+</span></div>
-            </div>
+            <div class="card__body"><div id="ldBars"></div></div>
           </div>
+
           <div class="stack">
             <div class="card">
-              <div class="card__head"><div class="grow"><h3>Coverage summary</h3><p>Across all 49 sample points</p></div></div>
-              <div class="card__body"><div id="localStats" class="grid grid--kpi"></div></div>
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Modelled 7×7 grid
+                    <span class="info" data-tip="A simplified grid view of the same data. The rank is printed in every cell, so the colour is never the only encoding.">?</span>
+                  </h3>
+                  <p id="geoKw2">“fence installation chicago” · 5 mi radius</p>
+                </div>
+              </div>
+              <div class="card__body">
+                <div class="geo" id="geoGrid2"></div>
+                <div class="geoscale"><span>Rank 1</span><span class="geoscale__ramp"></span><span>20+</span></div>
+              </div>
             </div>
             <div class="card">
-              <div class="card__head"><div class="grow"><h3>Why this matters</h3></div></div>
+              <div class="card__head"><div class="grow"><h3>What this tells us</h3></div></div>
               <div class="card__body">
                 <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">
-                  Google shows different map results depending on where the searcher is standing. Ranking #1 at your shop but #15 three miles north means you are invisible to a large share of your market.
+                  Google returns different map results depending on where the searcher is standing. Ranking #1 at the shop but #15 three miles west means you are invisible to a large share of the metro.
                 </p>
                 <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-top:11px">
-                  Your strongest coverage is the <b style="color:var(--text-primary)">central and southern</b> service area. The <b style="color:var(--text-primary)">north-east corner</b> is the current weak point — that is where the next service-area page and citation push are aimed.
+                  Coverage is strongest <b style="color:var(--text-primary)">east of the shop toward the lakefront</b> — Lincoln Park, Old Town and River North are near-solid top-3. The <b style="color:var(--text-primary)">western suburbs</b> (Oak Park, Cicero, Berwyn) are the weak flank, and <em>“chicago fence company”</em> is the weakest term at 5.85 average.
+                </p>
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-top:11px">
+                  That western gap is exactly what the next service-area pages and citation push are aimed at.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== GA4 -->
+      <section class="view" data-view="ga4">
+        <div class="grid grid--kpi" id="ga4Kpis"></div>
+
+        <div class="grid grid--main mt">
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Conversions over time
+                    <span class="info" data-tip="Quote requests and tracked calls recorded as GA4 conversion events. This is the bottom line of the campaign — everything else is a leading indicator of this number.">?</span>
+                  </h3>
+                  <p>Quote requests and tracked calls, by month</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="ga4Events"></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Top landing pages
+                    <span class="info" data-tip="The first page a visitor lands on. A high conversion rate here means the page is doing its job; high sessions with a low rate means the page attracts the wrong visitor or fails to ask for the job.">?</span>
+                  </h3>
+                  <p>Where sessions start, and how well each page converts</p>
+                </div>
+              </div>
+              <div class="card__body">
+                <div class="tablewrap">
+                  <table class="data">
+                    <thead>
+                      <tr><th>Landing page</th><th class="num">Sessions</th><th>Conversion rate</th><th class="num">Avg. engagement</th></tr>
+                    </thead>
+                    <tbody id="ga4Pages"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Where sessions come from
+                    <span class="info" data-tip="Acquisition channel for every session. Organic Search plus Google Maps is the share the SEO campaign is directly responsible for.">?</span>
+                  </h3>
+                  <p>Acquisition channel breakdown</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="ga4Channels"></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <div class="grow">
+                  <h3>Devices
+                    <span class="info" data-tip="Mobile dominance is typical for local service searches — people look for a contractor on their phone. It is why mobile page speed and tap-to-call placement matter more than desktop layout.">?</span>
+                  </h3>
+                  <p>Sessions by device category</p>
+                </div>
+              </div>
+              <div class="card__body"><div id="ga4Devices"></div></div>
             </div>
           </div>
         </div>
@@ -599,6 +766,7 @@
 
 <script src="assets/js/data.js"></script>
 <script src="assets/js/charts.js"></script>
+<script src="assets/js/modules.js"></script>
 <script src="assets/js/app.js"></script>
 </body>
 </html>

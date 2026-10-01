@@ -27,14 +27,30 @@ npx serve .
 | Screen | Shows |
 |---|---|
 | **Overview** | KPI row, click trend, keyword table, local grid, AI visibility, work completed |
-| **Search Rankings** | All tracked keywords with position, movement, landing page, buyer stage |
-| **Local Map Grid** | 7×7 geo-grid of Google Maps rank by location, plus coverage summary |
+| **Search Rankings** | GSC-style date picker + comparison, clicks/impressions toggle, per-keyword change table |
+| **Local Map Grid** | Real Local Dominator captures per keyword, coverage breakdown, modelled 7×7 grid |
+| **Website Analytics** | GA4 — sessions, users, engagement, conversions, channels, devices, landing pages |
 | **Business Profile** | GBP rating, reviews, response rate, and the four customer actions |
 | **AI Visibility** | Citation rate across ChatGPT, Google AI Overviews, Copilot, Perplexity |
 | **Competitors** | Share of local voice, five-dimension comparison, intelligence modules |
 | **Backlinks** | Referring domain growth, total links, domain authority |
 | **Action Plan** | Prioritised recommendations ranked by impact vs. effort |
 | **Reports** | Monthly PDF reports and audits |
+
+### Date range & comparison (Search Rankings)
+Modelled on Google Search Console: a preset picker (7 days → 12 months) plus a
+**Custom range** with real date inputs and a live day count, and a separate
+comparison selector (previous period / same period last year / custom / none).
+Changing either repaints the chart, the legend and the keyword table, which
+shows the current value, the prior value, and the percentage change per keyword.
+
+### Local Dominator
+The Local Map Grid uses **real August 2026 captures** for this account —
+six keywords, each with its own map and the stats read off that capture
+(average rank, high/medium/low coverage split, competitors tracked, TARP).
+Images live in `assets/img/local/` as WebP. When the API is connected, swap
+`localDominator.keywords[].img` for a live render; the rest of the view is
+already driven by data.
 
 ### Interaction
 - Login / logout with a profile menu (details, notifications, data sources, settings)
@@ -112,13 +128,22 @@ credential storage (never client-side OAuth tokens), and an audit trail.
 ## Structure
 
 ```
-index.html              markup + inline SVG icon sprite
-assets/css/styles.css   design tokens, components, light/dark, responsive
-assets/js/data.js       all demo data — the only file to replace
-assets/js/charts.js     dependency-free SVG charts
-assets/js/app.js        rendering, tooltips, nav, theme, auth flow
-vercel.json             caching + security headers
+index.html                  markup + inline SVG icon sprite
+assets/css/styles.css       design tokens, core components, light/dark, responsive
+assets/css/components.css   date controls, Local Dominator, GA4
+assets/js/data.js           all demo data — the only file to replace
+assets/js/charts.js         dependency-free SVG charts
+assets/js/modules.js        date range + comparison, Local Dominator, GA4
+assets/js/app.js            rendering, tooltips, nav, theme, auth flow
+assets/img/local/*.webp     real Local Dominator map captures
+vercel.json                 caching + security headers
 ```
+
+### A note on chart sizing
+Every chart measures its container and builds the viewBox in CSS pixels, so one
+SVG unit is one pixel. A fixed viewBox stretched with `preserveAspectRatio="none"`
+scales the axis *text* along with the geometry — that is what makes a chart look
+blurry and oversized on a wide screen. If you add a chart, measure first.
 
 ## Deploying
 

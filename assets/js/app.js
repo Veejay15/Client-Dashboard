@@ -48,6 +48,7 @@
       node.addEventListener("blur", () => Tip.hide());
     });
   }
+  window.__bindTips = bindTips;
 
   /* ============================================================== TOAST */
   let toastTimer;
@@ -57,6 +58,7 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => $("#toast").classList.remove("is-visible"), 3200);
   }
+  window.__toast = toast;
 
   /* ====================================================== BUTTON RIPPLE */
   document.addEventListener("pointerdown", e => {
@@ -141,6 +143,7 @@
     bindTips(mount);
     observe(mount);
   }
+  window.__renderKpis = renderKpis;
 
   /* --------------------------------------------------------- geo grid */
   function rankColor(rank) {
@@ -413,9 +416,18 @@
       labels: DEMO.backlinks.labels,
       values: DEMO.backlinks.referring,
       color: c1,
+      height: 260,
       unit: " referring domains",
       ariaLabel: "Referring domain growth by month"
     });
+
+    /* Module charts live in sections that start hidden, so they are rebuilt
+       here too — drawCharts() runs on every view change and on resize. */
+    if (window.Modules) {
+      window.Modules.refreshRankings();
+      window.Modules.renderGa4();
+      window.Modules.renderLdBars();
+    }
   }
 
   /* ====================================================== OBSERVER IN
@@ -453,8 +465,9 @@
   /* ============================================================== NAV */
   const TITLES = {
     overview:    ["Overview", "Last 3 months"],
-    rankings:    ["Search Rankings", "34 tracked keywords"],
-    local:       ["Local Map Grid", "49 sample points · 5 mi radius"],
+    rankings:    ["Search Rankings", "12 tracked keywords"],
+    local:       ["Local Map Grid", "Local Dominator · August 2026"],
+    ga4:         ["Website Analytics", "Google Analytics 4 · last 3 months"],
     gbp:         ["Business Profile", "Google Business Profile performance"],
     ai:          ["AI Visibility", "120 tracked prompts · updated weekly"],
     competitors: ["Competitors", "3 tracked local competitors"],
@@ -529,29 +542,18 @@
       `<button data-range="${r.id}"${r.active ? ' class="is-active"' : ""}>${r.label}</button>`).join("");
 
     renderKpis($("#kpiGrid"), DEMO.kpis);
-    renderKpis($("#rankKpis"), DEMO.kpis.slice(0, 4));
+    /* Three tiles, not four — the KPI grid is 3-up, so a fourth orphans a row. */
+    renderKpis($("#rankKpis"), [DEMO.kpis[0], DEMO.kpis[1], DEMO.kpis[4]]);
     renderKpis($("#blKpis"), [
       { id: "rd", label: "Referring Domains", value: 91, delta: 116.7, spark: DEMO.backlinks.referring, icon: "link", source: "Backlink audit", tip: "Unique websites linking to this site. Each distinct domain is a separate vote of confidence to Google." },
       { id: "tot", label: "Total Backlinks", value: DEMO.backlinks.total, delta: 84.9, spark: [128,151,174,203,228,256,281,318,318,318,318,318,318,318], icon: "link", source: "Backlink audit", tip: "Total individual links pointing at the site, across all referring domains." },
-      { id: "da", label: "Domain Authority", value: DEMO.backlinks.da, delta: 33.3, spark: [18,18,19,19,20,21,21,22,22,23,23,24,24,24], icon: "shield", source: "Moz", tip: "A 0–100 prediction of how well the domain will rank. Moving from 18 to 24 is a meaningful jump at this size." },
-      { id: "new", label: "New This Month", value: DEMO.backlinks.newThisMonth, delta: 44.4, spark: [4,5,6,6,7,8,9,9,10,11,12,12,13,13], icon: "up", source: "Backlink audit", tip: "Referring domains earned in the last 30 days, net of links lost." }
+      { id: "da", label: "Domain Authority", value: DEMO.backlinks.da, delta: 33.3, spark: [18,18,19,19,20,21,21,22,22,23,23,24,24,24], icon: "shield", source: "Moz", tip: "A 0–100 prediction of how well the domain will rank. Moving from 18 to 24 is a meaningful jump at this size." }
     ]);
 
     renderGeo($("#geoGrid"));
     renderGeo($("#geoGrid2"));
 
-    $("#localStats").innerHTML = `
-      <div class="stat"><div class="stat__top"><span class="stat__label">Average rank</span></div>
-        <div class="stat__value">${DEMO.geoGrid.avgRank}</div>${deltaHtml(38.4, true)}</div>
-      <div class="stat"><div class="stat__top"><span class="stat__label">Top-3 share</span></div>
-        <div class="stat__value">${DEMO.geoGrid.top3Share}%</div>${deltaHtml(200, false)}</div>
-      <div class="stat"><div class="stat__top"><span class="stat__label">Sample points</span></div>
-        <div class="stat__value">49</div><span class="delta delta--flat">7×7 grid</span></div>
-      <div class="stat"><div class="stat__top"><span class="stat__label">Best / worst</span></div>
-        <div class="stat__value">1 / 17</div><span class="delta delta--flat">Centre vs NE corner</span></div>`;
-
-    renderKeywords($("#kwBody"), DEMO.keywords, false);
-    renderKeywords($("#kwBodyFull"), DEMO.keywords, true);
+    renderKeywords($("#kwBody"), DEMO.keywords.slice(0, 10), false);
     renderCompLegend($("#compLegend"));
     renderCompLegend($("#compLegend2"));
     renderCompTable($("#compBody"));
@@ -563,6 +565,12 @@
     renderReports($("#reports"));
     renderGbp();
     buildTrafficTable();
+
+    /* Extended modules: date controls, Local Dominator maps, GA4 */
+    window.Modules.init(() => window.Modules.refreshRankings());
+    window.Modules.renderLocalDominator();
+    window.Modules.renderGa4();
+    window.Modules.refreshRankings();
 
     drawCharts();
     bindTips();
