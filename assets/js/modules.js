@@ -305,10 +305,19 @@
           signal: ctrl.signal
         });
         const body = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(LD_REASONS[body.error] || `The live connection returned an error (HTTP ${res.status}).`);
+        if (!res.ok) {
+          const up = body.upstream && body.upstream.status
+            ? ` (Local Dominator answered ${body.upstream.status} to ${body.upstream.step})` : "";
+          throw new Error((LD_REASONS[body.error] || `The live connection returned an error (HTTP ${res.status}).`) + up);
+        }
 
         const kws = (body.keywords || []).filter(k => k.kw && (k.grid || k.image));
-        if (!kws.length) throw new Error("Connected to Local Dominator, but no scans were found for this business yet.");
+        if (!kws.length) {
+          const m = body.meta || {};
+          throw new Error("Connected to Local Dominator, but no scans matched this business. " +
+            `It returned ${m.oneTimeFetched ?? "?"} one-time scans and ${m.campaignsFetched ?? "?"} scheduled scans for the search.` +
+            ((m.issues || []).length ? ` Issues: ${m.issues.map(i => `${i.step} → ${i.status}`).join(", ")}.` : ""));
+        }
 
         Object.assign(ld, {
           mode: "live",

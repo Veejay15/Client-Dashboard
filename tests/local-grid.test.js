@@ -193,7 +193,9 @@ test("auth failure → 502 ld_auth_failed, not cached, no upstream detail leaked
   mockFetch({ "/v1/scheduled-scans": 401, "/v1/scans": 401 });
   const r = await call(loadHandler(), "/api/local-grid?client=amf");
   assert.equal(r.status, 502);
-  assert.deepEqual(r.json, { error: "ld_auth_failed" });
+  // Only the step and status code are passed on — no body, no key.
+  assert.deepEqual(r.json, { error: "ld_auth_failed", upstream: { step: "GET /v1/scheduled-scans", status: 401 } });
+  assert.ok(!r.raw.includes(KEY));
   assert.equal(r.headers["cache-control"], "no-store");
 });
 

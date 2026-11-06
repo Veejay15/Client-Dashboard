@@ -22,7 +22,7 @@
 "use strict";
 
 const CLIENTS = require("./_lib/clients");
-const { fetchClientGrid, startCampaignRun, campaignStatus, REFRESH_COOLDOWN_DAYS } = require("./_lib/localDominator");
+const { fetchClientGrid, startCampaignRun, campaignStatus, describeError, REFRESH_COOLDOWN_DAYS } = require("./_lib/localDominator");
 
 function send(res, status, body) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -35,7 +35,7 @@ function failed(res, e, where) {
   console.error(`[local-scan] ${where}:`, e.status, e.message);
   if (e.status === 412) return send(res, 402, { error: "no_credits" });
   const auth = e.status === 401 || e.status === 403;
-  return send(res, 502, { error: auth ? "ld_auth_failed" : "ld_unavailable" });
+  return send(res, 502, { error: auth ? "ld_auth_failed" : "ld_unavailable", upstream: describeError(e) });
 }
 
 module.exports = async function handler(req, res) {

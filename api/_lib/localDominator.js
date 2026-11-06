@@ -234,7 +234,9 @@ async function collectOneTime(client, key) {
     const total = typeof r.data.totalcount === "number" ? r.data.totalcount : all.length;
     if (!scans.length || all.length >= total) break;
   }
-  return all.filter(s => matchesClient(s, client)).map(s => normalizeScan(s, "one-time"));
+  const mine = all.filter(s => matchesClient(s, client)).map(s => normalizeScan(s, "one-time"));
+  mine.fetched = all.length;                 // for diagnostics: found vs. matched
+  return mine;
 }
 
 /* ------------------------------------------------- scheduled campaigns */
@@ -255,8 +257,9 @@ function campaignRuns(detail) {
    summary of every campaign (used for on-demand scans and the schedule). */
 async function collectScheduled(client, key) {
   const list = await ldGet("/scheduled-scans", { text: client.search, per_page: "50", page: "0" }, key);
-  if (list.pending) return { rows: [], campaigns: [] };
-  const listed = asList(list.data, "scheduled_scans").filter(c => matchesClient(c, client));
+  if (list.pending) return { rows: [], campaigns: [], fetched: 0 };
+  const all = asList(list.data, "scheduled_scans");
+  const listed = all.filter(c => matchesClient(c, client));
 
   const per = await Promise.all(listed.map(async camp => {
     const d = await ldGet(`/scheduled-scans/${enc(camp.id)}`, { date_range: "1Y" }, key);
@@ -314,7 +317,13 @@ async function collectScheduled(client, key) {
     return { summary, rows: [] };
   }));
 
-  return { rows: per.flatMap(p => p.rows), campaigns: per.map(p => p.summary) };
+  return { rows: per.flatMap(p => p.rows), campaigns: per.map(p => p.summary), fetched: all.length };
+}
+
+/* What went wrong upstream, safe to show: the step and HTTP status only. */
+function describeError(e) {
+  const m = /^(GET|POST|PATCH|DELETE) (\/[a-z-]+)/.exec(String(e && e.message) || "");
+  return { step: m ? `${m[1]} /v1${m[2]}` : "request", status: (e && e.status) || null };
 }
 
 /* --------------------------------------------------- on-demand eligibility
@@ -387,8 +396,9 @@ async function fetchClientGrid(client, key) {
     collectOneTime(client, key)
   ]);
 
-  const sched = scheduled.status === "fulfilled" ? scheduled.value : { rows: [], campaigns: [] };
-  const scans = [...sched.rows, ...(oneTime.status === "fulfilled" ? oneTime.value : [])];
+  const sched = scheduled.status === "fulfilled" ? scheduled.value : { rows: [], campaigns: [], fetched: null };
+  const once = oneTime.status === "fulfilled" ? oneTime.value : null;
+  const scans = [...sched.rows, ...(once || [])];
   const errors = [scheduled, oneTime].filter(r => r.status === "rejected").map(r => r.reason);
   if (!scans.length && errors.length) throw errors[0];
 
@@ -400,9 +410,14 @@ async function fetchClientGrid(client, key) {
     keywords,
     campaigns: sched.campaigns,
     meta: {
+      // Counts only — never names of other businesses on the team account.
+      oneTimeFetched: once ? once.fetched : null,
+      oneTimeScans: once ? once.length : null,
+      campaignsFetched: sched.fetched,
+      campaignsMatched: sched.campaigns.length,
       scheduledRows: scheduled.status === "fulfilled" ? sched.rows.length : null,
-      oneTimeScans: oneTime.status === "fulfilled" ? oneTime.value.length : null,
-      partial: errors.length > 0
+      partial: errors.length > 0,
+      issues: errors.map(describeError)
     },
     errors
   };
@@ -489,6 +504,7 @@ async function createCampaign(body, key) {
 
 module.exports = {
   fetchClientGrid,
+  describeError,
   startCampaignRun,
   campaignStatus,
   planMonthly,

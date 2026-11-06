@@ -13,7 +13,7 @@
 "use strict";
 
 const CLIENTS = require("./_lib/clients");
-const { fetchClientGrid } = require("./_lib/localDominator");
+const { fetchClientGrid, describeError } = require("./_lib/localDominator");
 
 const MEMO_MS = 5 * 60 * 1000;       // per-instance cache, behind the edge cache
 const memo = new Map();
@@ -64,6 +64,6 @@ module.exports = async function handler(req, res) {
   } catch (e) {
     console.error("[local-grid] failed:", e.status, e.message);
     const auth = e.status === 401 || e.status === 403;
-    return send(res, 502, { error: auth ? "ld_auth_failed" : "ld_unavailable" });
+    return send(res, 502, { error: auth ? "ld_auth_failed" : "ld_unavailable", upstream: describeError(e) });
   }
 };
