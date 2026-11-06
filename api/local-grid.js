@@ -1,20 +1,21 @@
 /* ==========================================================================
-   GET /api/local-grid?client=<id>
+   GET /api/local-grid?client=<id>[&v=<token>]
    --------------------------------------------------------------------------
    Live Local Dominator geo-grid data for one dashboard client. The API key
    lives in the LD_API_KEY environment variable (Vercel → Settings →
    Environment Variables) and never leaves the server.
 
-   Responses are cached at Vercel's edge for 30 minutes and served stale for
-   up to a day while refreshing, so page views do not each hit Local
-   Dominator. Scans run weekly or monthly, so this is never meaningfully old.
+   Cached at Vercel's edge for 5 minutes (served stale for up to an hour
+   while refreshing). Reading costs no Local Dominator credits; the cache is
+   there to stay well inside API rate limits. After a fresh scan finishes,
+   the dashboard adds `v=<run time>` to get a new copy straight away.
    ========================================================================== */
 "use strict";
 
 const CLIENTS = require("./_lib/clients");
 const { fetchClientGrid } = require("./_lib/localDominator");
 
-const MEMO_MS = 10 * 60 * 1000;      // per-instance cache, behind the edge cache
+const MEMO_MS = 5 * 60 * 1000;       // per-instance cache, behind the edge cache
 const memo = new Map();
 
 function send(res, status, body, cache) {
@@ -38,8 +39,11 @@ module.exports = async function handler(req, res) {
   const client = Object.prototype.hasOwnProperty.call(CLIENTS, id) ? CLIENTS[id] : null;
   if (!client) return send(res, 404, { error: "unknown_client" });
 
-  const edgeCache = "public, s-maxage=1800, stale-while-revalidate=86400";
-  const hit = memo.get(id);
+  const v = (url.searchParams.get("v") || "").slice(0, 40);
+  const memoKey = `${id}|${v}`;
+  const edgeCache = "public, s-maxage=300, stale-while-revalidate=3600";
+
+  const hit = memo.get(memoKey);
   if (hit && Date.now() - hit.at < MEMO_MS) return send(res, 200, hit.body, edgeCache);
 
   try {
@@ -54,7 +58,8 @@ module.exports = async function handler(req, res) {
       keywords: result.keywords,
       meta: result.meta
     };
-    memo.set(id, { at: Date.now(), body });
+    if (memo.size > 50) memo.clear();
+    memo.set(memoKey, { at: Date.now(), body });
     return send(res, 200, body, edgeCache);
   } catch (e) {
     console.error("[local-grid] failed:", e.status, e.message);

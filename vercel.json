@@ -3,7 +3,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/local-grid.js": { "maxDuration": 30 }
+    "api/local-grid.js": { "maxDuration": 30 },
+    "api/local-scan.js": { "maxDuration": 30 }
   },
   "headers": [
     {

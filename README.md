@@ -57,7 +57,31 @@ scan report.
 It reads both **one-time scans** (`GET /v1/scans`) and **scheduled
 campaigns** (`/v1/scheduled-scans` → runs), keeps the newest scan per
 keyword and builds history from the rest. Responses are cached at Vercel's
-edge for 30 minutes.
+edge for 5 minutes.
+
+#### Fresh scans on request
+Each keyword has a **Request a fresh scan** button (click twice — scans
+spend credits). It calls `POST /api/local-scan`, which runs the keyword's
+own monthly campaign immediately ("run now"); the page polls
+`GET /api/local-scan` every 20 s and swaps in the new scan when it lands.
+The server — not the button — enforces, by reading Local Dominator itself:
+one requested scan per keyword every **7 days** (any scan of the keyword
+counts), never while one is already running, and only for keywords with
+their **own single-keyword campaign** (running a multi-keyword campaign
+would bill every keyword in it). Requests need an `X-Dashboard: 1` header,
+so other sites cannot trigger scans from a visitor's browser. Out of
+credits returns `no_credits`.
+
+#### Monthly scans (one-time setup per client)
+```bash
+node scripts/ld-monthly-setup.js amf           # dry run: plan + pins per month
+node scripts/ld-monthly-setup.js amf --apply   # create the campaigns
+```
+Creates one monthly campaign per keyword (1st of the month, 13:00 UTC),
+copying the grid of that keyword's latest scan so results stay comparable,
+and skips keywords that already have one. These campaigns are also what
+switch on the fresh-scan button. Reads `LD_API_KEY` from `.env.local`
+(git-ignored). Runs locally only — the website cannot create campaigns.
 
 If the key is missing, Local Dominator is down, or the page is opened as a
 local file, the view falls back to the saved **August 2026 captures** in
@@ -148,6 +172,11 @@ the URL can read that client's map rankings. It only serves clients listed in
 `api/_lib/clients.js` and never exposes the API key, but per-client access
 control belongs in front of it before real clients get logins.
 
+The same goes for `/api/local-scan`: anyone with the URL can start fresh
+scans. The 7-day limit caps the worst case at one scan per keyword per week
+(for Americana, roughly the same credits as one extra monthly run per
+week), but it should sit behind real logins too.
+
 ---
 
 ## Structure
@@ -162,6 +191,8 @@ assets/js/modules.js        date range + comparison, Local Dominator, GA4
 assets/js/app.js            rendering, tooltips, nav, theme, auth flow
 assets/img/local/*.webp     saved Local Dominator captures (offline fallback)
 api/local-grid.js           serverless endpoint — live Local Dominator data
+api/local-scan.js           serverless endpoint — start / track a fresh scan
+scripts/ld-monthly-setup.js one-time monthly campaign setup (local only)
 api/_lib/localDominator.js  Local Dominator API client + normalisation
 api/_lib/clients.js         which scans belong to which client
 tests/                      endpoint tests (excluded from deploys)

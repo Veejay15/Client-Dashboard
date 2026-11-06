@@ -284,9 +284,13 @@
     });
   }
 
-  /* ---------------------------------------------------------- loading */
-  async function loadLiveLocal() {
-    const client = (DEMO.clients.find(c => c.active) || {}).id;
+  const activeClientId = () => (DEMO.clients.find(c => c.active) || {}).id;
+
+  /* ---------------------------------------------------------- loading
+     `version` is passed after a fresh scan finishes, so the request skips
+     the 5-minute edge cache and returns the new scan immediately. */
+  async function loadLiveLocal(version) {
+    const client = activeClientId();
     const prevKw = (ld.keywords[ld.active] || {}).kw;
 
     if (location.protocol === "file:") {
@@ -295,7 +299,8 @@
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 25000);
       try {
-        const res = await fetch(`/api/local-grid?client=${encodeURIComponent(client)}`, {
+        const v = version ? `&v=${encodeURIComponent(version)}` : "";
+        const res = await fetch(`/api/local-grid?client=${encodeURIComponent(client)}${v}`, {
           headers: { Accept: "application/json" },
           signal: ctrl.signal
         });
@@ -325,6 +330,15 @@
     window.__setViewSub("local", ld.mode === "live"
       ? `Local Dominator · live · ${ld.keywords.length} tracked keywords`
       : `Local Dominator · saved ${ld.captured} captures`);
+
+    // Pick up scans that were already running when the page opened.
+    if (ld.mode === "live") {
+      ld.keywords.forEach(k => {
+        if (k.refresh && k.refresh.reason === "running" && !scanJobs.has(k.refresh.campaignId)) {
+          trackScan(k.refresh.campaignId, k.kw, null);
+        }
+      });
+    }
     renderLocalDominator();
     paintOverviewGeo();
   }
@@ -387,10 +401,21 @@
     img.classList.remove("is-loaded");
     fig.classList.add("is-loading");
     img.alt = `Local Dominator map for “${k.kw}” — average rank ${fmtAvg(k.avg)}`;
-    img.onload = () => { img.classList.add("is-loaded"); fig.classList.remove("is-loading"); };
-    img.onerror = () => showGridInMap(k);
-    if (k.image) img.src = k.image;
-    else showGridInMap(k);
+    // A map image that neither loads nor fails within 8s is treated as failed,
+    // so a slow Local Dominator server never leaves an empty panel.
+    const token = {};
+    ld.imgToken = token;
+    const stale = () => ld.imgToken !== token;
+    img.onload = () => { if (stale()) return; img.classList.add("is-loaded"); fig.classList.remove("is-loading"); };
+    img.onerror = () => { if (!stale()) showGridInMap(k); };
+    if (k.image) {
+      img.src = k.image;
+      setTimeout(() => {
+        if (!stale() && !img.classList.contains("is-loaded") && !img.hidden) showGridInMap(k);
+      }, 8000);
+    } else {
+      showGridInMap(k);
+    }
 
     paintLdMeta();
     paintLdLinks(k);
@@ -422,6 +447,7 @@
            <svg><use href="#i-${icon}"></use></svg> ${label} ${ext}</a>`
       : "";
     const html = ld.mode === "live" ? [
+      scanButton(k),
       link(k.live, "map", "Open interactive map", "Opens this scan in Local Dominator — zoom in and click any pin to see who outranks you at that spot."),
       link(k.report, "doc", "Scan analysis report", "Local Dominator's written analysis of this scan: strong and weak zones, top competitors and next steps."),
       link(k.campaign, "calendar", "All scans for this keyword", "Every scheduled run of this keyword in Local Dominator.")
@@ -430,6 +456,130 @@
     box.innerHTML = html;
     box.hidden = !html.trim();
     window.__bindTips(box);
+  }
+
+  /* ------------------------------------------------- on-demand scans
+     The server decides eligibility (7-day limit, one at a time, keyword has
+     its own monthly campaign) and re-checks it on every request; the button
+     only mirrors that state. Disabled states use aria-disabled rather than
+     `disabled` so their explanatory tooltips still show on hover.         */
+  const SCAN_POLL_MS = 20000;
+  const SCAN_GIVE_UP_MS = 20 * 60 * 1000;
+  const scanJobs = new Map();                 // campaignId → { kw, since, started, timer }
+
+  const SCAN_ERRORS = {
+    no_credits: "Local Dominator is out of scan credits — your strategist has been told.",
+    no_schedule: "Fresh scans aren't switched on for this keyword yet.",
+    multi_keyword: "This keyword is scanned together with others, so it can't be re-scanned on its own.",
+    not_configured: "Live scanning isn't connected yet.",
+    ld_auth_failed: "Local Dominator rejected the connection. Please let your strategist know.",
+    ld_unavailable: "Local Dominator isn't responding right now. Please try again shortly."
+  };
+
+  function scanButton(k) {
+    const r = k.refresh;
+    if (!r) return "";
+    const off = (icon, label, tip) =>
+      `<button type="button" class="btn btn--ghost btn--sm btn--off" aria-disabled="true" data-tip="${tip}">
+         <svg${icon === "refresh" ? ' class="spin"' : ""}><use href="#i-${icon}"></use></svg> ${label}</button>`;
+
+    if ((r.campaignId && scanJobs.has(r.campaignId)) || r.reason === "running") {
+      return off("refresh", "Scan running…",
+        `Local Dominator is scanning “${esc(k.kw)}” right now. The new map appears here automatically, usually within 5–10 minutes.`);
+    }
+    if (r.available) {
+      return `<button type="button" class="btn btn--primary btn--sm" id="ldScanBtn" data-kw="${esc(k.kw)}"
+        data-tip="Runs a brand-new Local Dominator scan of this keyword. The new map appears here automatically, usually within 5–10 minutes.<br><br>Each keyword can be re-scanned once every 7 days.">
+        <svg><use href="#i-refresh"></use></svg> Request a fresh scan</button>`;
+    }
+    if (r.reason === "cooldown") {
+      return off("clock", `Next fresh scan ${fmtDate(r.nextAt, false)}`,
+        `Each keyword can be re-scanned once every 7 days. This one was scanned recently — it can be scanned again on ${fmtDate(r.nextAt)}.`);
+    }
+    if (r.reason === "multi_keyword") {
+      return off("refresh", "Fresh scan unavailable",
+        "This keyword is scanned together with others in Local Dominator, so it can't be re-scanned on its own.");
+    }
+    return off("refresh", "Fresh scans coming soon",
+      "Fresh scans switch on once this keyword's monthly scan schedule is set up by your Makarios strategist.");
+  }
+
+  async function requestScan(btn) {
+    const k = ld.keywords[ld.active];
+    if (!k || btn.getAttribute("aria-disabled") === "true") return;
+
+    // Scans spend credits — first click arms, second click starts.
+    if (!btn.classList.contains("is-confirming")) {
+      btn.classList.add("is-confirming");
+      btn.innerHTML = `<svg><use href="#i-check"></use></svg> Click again to start the scan`;
+      btn.__reset = setTimeout(() => paintLdLinks(ld.keywords[ld.active]), 5000);
+      return;
+    }
+    clearTimeout(btn.__reset);
+    btn.setAttribute("aria-disabled", "true");
+    btn.innerHTML = `<svg class="spin"><use href="#i-refresh"></use></svg> Starting…`;
+
+    let msg;
+    try {
+      const q = new URLSearchParams({ client: activeClientId(), kw: k.kw });
+      const res = await fetch(`/api/local-scan?${q}`, {
+        method: "POST",
+        headers: { "X-Dashboard": "1", Accept: "application/json" }
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (res.status === 202) {
+        k.refresh = { available: false, reason: "running", campaignId: body.campaignId };
+        trackScan(body.campaignId, k.kw, body.startedAt);
+        msg = `Scan started for “${k.kw}” — the new map will appear here in about 5–10 minutes.`;
+      } else if (body.error === "running") {
+        k.refresh = { available: false, reason: "running", campaignId: body.campaignId };
+        trackScan(body.campaignId, k.kw, null);
+        msg = "A scan for this keyword is already running.";
+      } else if (body.error === "cooldown") {
+        k.refresh = { ...k.refresh, available: false, reason: "cooldown", nextAt: body.nextAt };
+        msg = `This keyword was scanned recently — it can be scanned again on ${fmtDate(body.nextAt)}.`;
+      } else {
+        msg = SCAN_ERRORS[body.error] || "The scan couldn't be started. Please try again later.";
+      }
+    } catch (e) {
+      msg = "Couldn't reach the server. Please check your connection and try again.";
+    }
+    window.__toast(msg);
+    if (ld.keywords[ld.active] === k) paintLdLinks(k);
+  }
+
+  function trackScan(campaignId, kw, since) {
+    if (!campaignId || scanJobs.has(campaignId)) return;
+    scanJobs.set(campaignId, { kw, since, started: Date.now(), timer: null });
+    scanJobs.get(campaignId).timer = setTimeout(() => pollScan(campaignId), SCAN_POLL_MS);
+  }
+
+  async function pollScan(campaignId) {
+    const job = scanJobs.get(campaignId);
+    if (!job) return;
+    if (Date.now() - job.started > SCAN_GIVE_UP_MS) {
+      scanJobs.delete(campaignId);
+      window.__toast(`The scan for “${job.kw}” is taking longer than usual. It will show here once Local Dominator finishes.`);
+      return;
+    }
+    try {
+      const q = new URLSearchParams({ client: activeClientId(), campaign: campaignId });
+      if (job.since) q.set("since", job.since);
+      const res = await fetch(`/api/local-scan?${q}`, { headers: { "X-Dashboard": "1", Accept: "application/json" } });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.status === "done") {
+        scanJobs.delete(campaignId);
+        window.__toast(`Fresh scan ready for “${job.kw}”.`);
+        await loadLiveLocal(body.lastRunAt || String(Date.now()));
+        return;
+      }
+      if (res.status === 404 || res.status === 400) {        // campaign gone — stop quietly
+        scanJobs.delete(campaignId);
+        return;
+      }
+    } catch (e) { /* network blip — try again next tick */ }
+    job.timer = setTimeout(() => pollScan(campaignId), SCAN_POLL_MS);
   }
 
   function rankDelta(k) {
@@ -478,6 +628,8 @@
         <span class="ldstat__label">Last scanned</span>
         <div class="ldstat__value ldstat__value--sm">${fmtDate(k.scannedAt)}</div>
         <span class="ldstat__sub">${esc(gridLabel(k))}${k.source === "scheduled" ? " · scheduled scan" : ""}</span>
+        ${k.schedule && k.schedule.nextRunAt ? `<span class="ldstat__next" data-tip="Local Dominator re-scans this keyword automatically every month, so the trend keeps building without anyone asking.">
+          <svg><use href="#i-calendar"></use></svg> Next automatic scan ${fmtDate(k.schedule.nextRunAt)}</span>` : ""}
       </div>`;
     } else {
       html += `
@@ -812,13 +964,24 @@
   }
 
   /* ============================================================= EXPORT */
+  let inited = false;
+
   window.Modules = {
     init(onRankingsChange) {
+      // boot() runs again after sign-out → sign-in; listeners must bind once,
+      // or one click on "Request a fresh scan" would both arm AND confirm it.
+      if (inited) return;
+      inited = true;
       initDateControls(onRankingsChange);
 
       $("#ldPicker").addEventListener("click", e => {
         const b = e.target.closest("[data-ld]");
         if (b) selectLdKeyword(+b.dataset.ld);
+      });
+
+      $("#ldLinks").addEventListener("click", e => {
+        const b = e.target.closest("#ldScanBtn");
+        if (b) requestScan(b);
       });
 
       // The coverage bars double as a keyword picker.

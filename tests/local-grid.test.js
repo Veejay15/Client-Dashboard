@@ -70,6 +70,7 @@ const fixtures = {
     scans: [
       { keyword: "Chicago wrought iron gates", name: AMF, place_id: "ChIJ-amf", average_rank: 2.4,
         creation_timestamp: "2026-10-15 10:00:00+00", shape: "square", grid_size: 5, locations_distance: 804.672,
+        center_lat: 41.9104, center_lng: -87.6505,
         content: grid(5, (r, c) => (r === 0 && c === 0 ? null : (r + c) % 5 + 1)),
         share_links: { image_link: "javascript:alert(1)", dynamic_url: "https://evil.example.com/x" },
         scan_uuid: "s-new" },
@@ -87,8 +88,11 @@ function mockFetch(overrides = {}) {
   const calls = [];
   global.fetch = async (url, opts) => {
     const u = new URL(url);
-    calls.push({ url: u, headers: opts.headers });
-    const route = overrides[u.pathname] || fixtures[u.pathname];
+    const method = opts.method || "GET";
+    calls.push({ url: u, headers: opts.headers, method, body: opts.body ? JSON.parse(opts.body) : null });
+    const route = method === "GET"
+      ? overrides[u.pathname] ?? fixtures[u.pathname]
+      : overrides[`${method} ${u.pathname}`] ?? { message: "ok" };
     if (typeof route === "number") return { ok: false, status: route, json: async () => ({}) };
     if (!route) return { ok: false, status: 404, json: async () => ({}) };
     return { ok: true, status: 200, json: async () => JSON.parse(JSON.stringify(route)) };
@@ -127,7 +131,7 @@ test("merges scheduled + one-time scans into the latest scan per keyword", async
   const r = await call(loadHandler(), "/api/local-grid?client=amf");
 
   assert.equal(r.status, 200);
-  assert.match(r.headers["cache-control"], /s-maxage=1800/);
+  assert.match(r.headers["cache-control"], /s-maxage=300/);
 
   // Auth + host on every upstream request
   assert.ok(calls.length > 0);
@@ -232,4 +236,163 @@ test("timestamps in Local Dominator's Postgres format parse to ISO", () => {
   assert.equal(parseTs("2026-04-10T08:00:00.000Z"), "2026-04-10T08:00:00.000Z");
   assert.equal(parseTs("garbage"), null);
   assert.equal(parseTs(null), null);
+});
+
+/* ======================================================================
+   On-demand scans (/api/local-scan) and the monthly plan
+   ====================================================================== */
+function loadScan() {
+  for (const id of Object.keys(require.cache)) if (id.startsWith(API)) delete require.cache[id];
+  return require(path.join(API, "local-scan.js"));
+}
+
+async function callScan(handler, method, url, headers = { "x-dashboard": "1" }) {
+  const res = {
+    headers: {}, statusCode: 200, body: "",
+    setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
+    end(b) { this.body = b; }
+  };
+  await handler({ method, url, headers }, res);
+  return { status: res.statusCode, headers: res.headers, raw: res.body, json: JSON.parse(res.body) };
+}
+
+const daysAgo = d => new Date(Date.now() - d * 864e5).toISOString();
+/* Campaign c-1 whose last run was `d` days ago. */
+const c1RanDaysAgo = (d, extra = {}) => ({
+  "/v1/scheduled-scans/c-1": { id: "c-1", place_name: AMF, ...extra,
+    runs: [{ run_uuid: "r-3", created_at: daysAgo(d), average_rank: 3.1 }] },
+  "/v1/scheduled-scan-runs/r-3": [{ ...fixtures["/v1/scheduled-scan-runs/r-3"][0],
+    creation_timestamp: daysAgo(d) }]
+});
+
+test("refreshState: eligibility rules", () => {
+  const { refreshState } = require(path.join(API, "_lib", "localDominator.js"))._internal;
+  const now = Date.parse("2026-11-06T12:00:00Z");
+  const camp = { id: "c", single: true, inProgress: false, lastRunAt: "2026-10-20T08:00:00Z" };
+  assert.deepEqual(refreshState(null, null, now), { available: false, reason: "no_schedule" });
+  assert.equal(refreshState({ ...camp, single: false }, null, now).reason, "multi_keyword");
+  assert.equal(refreshState({ ...camp, inProgress: true }, null, now).reason, "running");
+  assert.deepEqual(refreshState(camp, null, now), { available: true, campaignId: "c" });
+  const cd = refreshState({ ...camp, lastRunAt: "2026-11-03T08:00:00Z" }, null, now);
+  assert.equal(cd.reason, "cooldown");
+  assert.equal(cd.nextAt, "2026-11-10T08:00:00.000Z");
+  // a recent one-time scan of the keyword also counts toward the 7 days
+  assert.equal(refreshState(camp, "2026-11-05T08:00:00Z", now).reason, "cooldown");
+});
+
+test("scan: requires the X-Dashboard header (blocks cross-site triggers)", async () => {
+  process.env.LD_API_KEY = KEY;
+  const calls = mockFetch();
+  const r = await callScan(loadScan(), "POST", "/api/local-scan?client=amf&kw=fence%20installation%20chicago", {});
+  assert.equal(r.status, 403);
+  assert.equal(calls.length, 0);
+});
+
+test("scan: eligible keyword → run-now on its own campaign, 202", async () => {
+  process.env.LD_API_KEY = KEY;
+  const calls = mockFetch(c1RanDaysAgo(10));
+  const r = await callScan(loadScan(), "POST", "/api/local-scan?client=amf&kw=FENCE%20installation%20chicago");
+  assert.equal(r.status, 202);
+  assert.equal(r.json.status, "started");
+  assert.equal(r.json.campaignId, "c-1");
+  const posts = calls.filter(c => c.method === "POST");
+  assert.equal(posts.length, 1, "exactly one paid request");
+  assert.equal(posts[0].url.pathname, "/v1/scheduled-scans/c-1/run-now");
+  assert.equal(r.headers["cache-control"], "no-store");
+  assert.ok(!r.raw.includes(KEY));
+});
+
+test("scan: scanned 3 days ago → 429 cooldown, nothing spent", async () => {
+  process.env.LD_API_KEY = KEY;
+  const calls = mockFetch(c1RanDaysAgo(3));
+  const r = await callScan(loadScan(), "POST", "/api/local-scan?client=amf&kw=fence%20installation%20chicago");
+  assert.equal(r.status, 429);
+  assert.equal(r.json.error, "cooldown");
+  assert.ok(Date.parse(r.json.nextAt) > Date.now());
+  assert.equal(calls.filter(c => c.method === "POST").length, 0);
+});
+
+test("scan: campaign already running → 409, nothing spent", async () => {
+  process.env.LD_API_KEY = KEY;
+  const calls = mockFetch(c1RanDaysAgo(10, { in_progress: true }));
+  const r = await callScan(loadScan(), "POST", "/api/local-scan?client=amf&kw=fence%20installation%20chicago");
+  assert.equal(r.status, 409);
+  assert.equal(r.json.error, "running");
+  assert.equal(r.json.campaignId, "c-1");
+  assert.equal(calls.filter(c => c.method === "POST").length, 0);
+});
+
+test("scan: keyword without its own campaign → 409 no_schedule", async () => {
+  process.env.LD_API_KEY = KEY;
+  const calls = mockFetch();
+  const r = await callScan(loadScan(), "POST", "/api/local-scan?client=amf&kw=Chicago%20wrought%20iron%20gates");
+  assert.equal(r.status, 409);
+  assert.equal(r.json.error, "no_schedule");
+  assert.equal(calls.filter(c => c.method === "POST").length, 0);
+});
+
+test("scan: unknown keyword → 404; out of credits (412) → 402 no_credits", async () => {
+  process.env.LD_API_KEY = KEY;
+  mockFetch();
+  let r = await callScan(loadScan(), "POST", "/api/local-scan?client=amf&kw=roofing%20chicago");
+  assert.equal(r.status, 404);
+
+  mockFetch({ ...c1RanDaysAgo(10), "POST /v1/scheduled-scans/c-1/run-now": 412 });
+  r = await callScan(loadScan(), "POST", "/api/local-scan?client=amf&kw=fence%20installation%20chicago");
+  assert.equal(r.status, 402);
+  assert.equal(r.json.error, "no_credits");
+});
+
+test("scan status: running until a new run exists and LD is idle; other businesses are refused", async () => {
+  process.env.LD_API_KEY = KEY;
+  const since = daysAgo(0.01);                       // ~15 minutes ago
+  const status = overrides => {
+    mockFetch(overrides);
+    return callScan(loadScan(), "GET", `/api/local-scan?client=amf&campaign=c-1&since=${encodeURIComponent(since)}`);
+  };
+
+  // just requested: not in progress yet, no new run → still "running"
+  let r = await status(c1RanDaysAgo(10));
+  assert.equal(r.json.status, "running");
+  // in progress
+  r = await status(c1RanDaysAgo(0.005, { in_progress: true }));
+  assert.equal(r.json.status, "running");
+  // finished
+  r = await status(c1RanDaysAgo(0.005));
+  assert.equal(r.json.status, "done");
+  assert.ok(r.json.lastRunAt);
+
+  // a campaign belonging to another business is not reported on
+  mockFetch({ "/v1/scheduled-scans/c-9xxxx": { id: "c-9xxxx", place_name: "Other Fence Co", runs: [] } });
+  r = await callScan(loadScan(), "GET", "/api/local-scan?client=amf&campaign=c-9xxxx");
+  assert.equal(r.status, 404);
+
+  r = await callScan(loadScan(), "GET", "/api/local-scan?client=amf&campaign=../../x");
+  assert.equal(r.status, 400);
+});
+
+test("monthly plan: one campaign per keyword, copying the latest grid; existing ones kept", async () => {
+  process.env.LD_API_KEY = KEY;
+  mockFetch();
+  const { fetchClientGrid, planMonthly } = require(path.join(API, "_lib", "localDominator.js"));
+  const CLIENTS = require(path.join(API, "_lib", "clients.js"));
+  const grid = await fetchClientGrid(CLIENTS.amf, KEY);
+  const plan = planMonthly(CLIENTS.amf, grid);
+
+  const fic = plan.items.find(i => i.kw === "fence installation chicago");
+  assert.equal(fic.action, "keep");
+  assert.equal(fic.existingId, "c-1");
+
+  const wig = plan.items.find(i => i.kw === "Chicago wrought iron gates");
+  assert.equal(wig.action, "create");
+  assert.equal(wig.points, 25);                       // 5×5 square
+  assert.deepEqual(wig.body.search_terms, ["Chicago wrought iron gates"]);
+  assert.equal(wig.body.google_place_id, "ChIJ-amf");
+  assert.equal(wig.body.grid_size, 5);
+  assert.equal(wig.body.distance, 805);
+  assert.equal(wig.body.shape, "square");
+  assert.equal(wig.body.scheduling, "0 13 1 * *");
+  assert.equal(wig.body.run_now, false);
+  assert.equal(plan.newPointsPerMonth, 25);
+  assert.equal(plan.totalPointsPerMonth, 25 + 37);   // + the existing 7×7 circle
 });

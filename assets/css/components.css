@@ -205,6 +205,22 @@
 .ldlinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .ldlinks a.btn { text-decoration: none; }
 .ldlinks .ldlinks__ext { width: 12px; height: 12px; opacity: .6; }
+.ldlinks .btn--off { cursor: default; opacity: .72; box-shadow: none; }
+.ldlinks .btn--off:hover { transform: none; }
+.ldlinks .btn.is-confirming { background: var(--warning); border-color: var(--warning); color: #fff; }
+
+.ldstat__next {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.ldstat__next svg { width: 12px; height: 12px; flex: none; color: var(--good); }
 
 .ldstat__value small { font-size: 13px; font-weight: 550; letter-spacing: 0; color: var(--text-muted); }
 .ldstat__value--sm { font-size: 19px; margin-top: 2px; }

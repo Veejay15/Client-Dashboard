@@ -1,2 +1,3 @@
 # Not part of the site — keep out of the deployment
 tests/
+scripts/
