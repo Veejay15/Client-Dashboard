@@ -218,53 +218,269 @@
     renderKeywordTable();
   }
 
-  /* ================================================== LOCAL DOMINATOR */
+  /* ================================================== LOCAL DOMINATOR
+     Live data comes from /api/local-grid, a Vercel function that holds the
+     Local Dominator API key server-side. Until it answers — or if it can't —
+     the view shows the saved August 2026 captures in DEMO.localDominator.
+     Both sources are adapted to one keyword shape, so every renderer below
+     works the same either way.                                           */
   const RANK_BANDS = [
-    { key: "high", label: "High (top 3)", color: "--good" },
-    { key: "med",  label: "Medium (4–10)", color: "--warning" },
-    { key: "low",  label: "Low (11+)", color: "--critical" }
+    { key: "high",   label: "High (top 3)",  color: "--good" },
+    { key: "med",    label: "Medium (4–10)", color: "--warning" },
+    { key: "low",    label: "Low (11–20)",   color: "--critical" },
+    { key: "outPct", label: "Not in top 20", color: "--demph" }
   ];
 
-  let ldActive = 0;
+  const LD_REASONS = {
+    not_configured: "The Local Dominator API key has not been added in Vercel yet.",
+    ld_auth_failed: "Local Dominator rejected the API key — it may have been revoked or mistyped.",
+    ld_unavailable: "Local Dominator is not responding right now. The page will use live data again on the next load.",
+    unknown_client: "This client has not been mapped to Local Dominator yet."
+  };
 
+  const ld = {
+    mode: "loading",          // loading → live | static
+    reason: "",
+    business: "", address: "", captured: "",
+    keywords: [],
+    active: 0
+  };
+
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, ch =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+  const fmtAvg = n => (typeof n === "number" ? n.toFixed(2) : "—");
+  function fmtDate(s, withYear = true) {
+    if (!s) return "—";
+    const d = s.length === 10 ? parseISO(s) : new Date(s);
+    return `${MONTHS[d.getMonth()]} ${d.getDate()}${withYear ? ", " + d.getFullYear() : ""}`;
+  }
+  function fmtSpacing(m) {
+    if (typeof m !== "number" || !m) return null;
+    const mi = m / 1609.344;
+    return (mi >= 0.95 ? mi.toFixed(1).replace(/\.0$/, "") : mi.toFixed(2).replace(/0$/, "")) + " mi";
+  }
+  function gridLabel(k) {
+    const n = k.grid ? k.grid.length : k.gridSize;
+    const sp = fmtSpacing(k.spacingM);
+    return [n ? `${n}×${n} grid` : null, sp ? `${sp} apart` : null].filter(Boolean).join(" · ");
+  }
+
+  function useStatic(reason) {
+    const d = DEMO.localDominator;
+    Object.assign(ld, {
+      mode: "static",
+      reason,
+      business: d.business,
+      address: d.address,
+      captured: d.captured,
+      keywords: d.keywords.map(k => ({
+        kw: k.kw,
+        avg: k.avg,
+        image: `assets/img/local/${k.img}.webp`,
+        stats: { high: k.high, med: k.med, low: k.low },
+        competitors: k.competitors,
+        grid: null
+      }))
+    });
+  }
+
+  /* ---------------------------------------------------------- loading */
+  async function loadLiveLocal() {
+    const client = (DEMO.clients.find(c => c.active) || {}).id;
+    const prevKw = (ld.keywords[ld.active] || {}).kw;
+
+    if (location.protocol === "file:") {
+      useStatic("Live data needs the deployed site — this page was opened as a local file.");
+    } else {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 25000);
+      try {
+        const res = await fetch(`/api/local-grid?client=${encodeURIComponent(client)}`, {
+          headers: { Accept: "application/json" },
+          signal: ctrl.signal
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(LD_REASONS[body.error] || `The live connection returned an error (HTTP ${res.status}).`);
+
+        const kws = (body.keywords || []).filter(k => k.kw && (k.grid || k.image));
+        if (!kws.length) throw new Error("Connected to Local Dominator, but no scans were found for this business yet.");
+
+        Object.assign(ld, {
+          mode: "live",
+          reason: "",
+          business: body.business,
+          address: body.address,
+          keywords: kws
+        });
+      } catch (e) {
+        useStatic(e.name === "AbortError" ? "Local Dominator took too long to respond." : e.message);
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // Keep the keyword the viewer was looking at, if it still exists.
+    const i = prevKw ? ld.keywords.findIndex(k => k.kw.toLowerCase() === prevKw.toLowerCase()) : -1;
+    ld.active = Math.max(0, i);
+    window.__setViewSub("local", ld.mode === "live"
+      ? `Local Dominator · live · ${ld.keywords.length} tracked keywords`
+      : `Local Dominator · saved ${ld.captured} captures`);
+    renderLocalDominator();
+    paintOverviewGeo();
+  }
+
+  /* -------------------------------------------------------- rendering */
   function renderLocalDominator() {
-    const ld = DEMO.localDominator;
-    $("#ldMeta").textContent = `${ld.business} · ${ld.address} · ${ld.captured}`;
+    if (!ld.keywords.length) {                    // first paint, before the fetch lands
+      useStatic("");
+      ld.mode = "loading";
+    }
+    paintLdChip();
+    paintLdMeta();
 
     $("#ldPicker").innerHTML = ld.keywords.map((k, i) => `
-      <button class="${i === ldActive ? "is-active" : ""}" data-ld="${i}">
-        ${k.kw} <i>${k.avg}</i>
+      <button class="${i === ld.active ? "is-active" : ""}" data-ld="${i}">
+        ${esc(k.kw)} <i>${fmtAvg(k.avg)}</i>
       </button>`).join("");
 
     paintLdMap();
     renderLdBars();
   }
 
+  function paintLdChip() {
+    const chip = $("#ldChip");
+    if (ld.mode === "live") {
+      const latest = ld.keywords.map(k => k.scannedAt).filter(Boolean).sort().pop();
+      chip.className = "chip chip--live";
+      chip.innerHTML = `<i></i> Live${latest ? " · scanned " + fmtDate(latest, false) : ""}`;
+      chip.setAttribute("data-tip",
+        "Pulled straight from Local Dominator through its API. New scans show up here automatically — the connection refreshes every 30 minutes.");
+    } else if (ld.mode === "static") {
+      chip.className = "chip chip--warn";
+      chip.innerHTML = `<svg><use href="#i-alert"></use></svg> Saved capture`;
+      chip.setAttribute("data-tip",
+        `Showing the saved ${esc(ld.captured)} captures instead of live data.` +
+        (ld.reason ? `<br><br>${esc(ld.reason)}` : ""));
+    } else {
+      chip.className = "chip";
+      chip.innerHTML = `<svg class="spin"><use href="#i-refresh"></use></svg> Connecting…`;
+      chip.setAttribute("data-tip", "Loading the latest scans from Local Dominator…");
+    }
+  }
+
+  function paintLdMeta() {
+    const k = ld.keywords[ld.active] || {};
+    const parts = [ld.business, ld.address];
+    if (ld.mode === "live") parts.push(gridLabel(k));
+    else parts.push(ld.captured);
+    $("#ldMeta").textContent = parts.filter(Boolean).join(" · ");
+  }
+
   function paintLdMap() {
-    const k = DEMO.localDominator.keywords[ldActive];
-    const img = $("#ldImg");
+    const k = ld.keywords[ld.active];
+    if (!k) return;
+    const fig = $("#ldMap"), img = $("#ldImg"), fb = $("#ldFallback");
 
+    fb.hidden = true;
+    fb.innerHTML = "";
+    img.hidden = false;
     img.classList.remove("is-loaded");
-    img.alt = `Local Dominator map for “${k.kw}” — average rank ${k.avg}`;
-    img.onload = () => img.classList.add("is-loaded");
-    img.src = `assets/img/local/${k.img}.webp`;
+    fig.classList.add("is-loading");
+    img.alt = `Local Dominator map for “${k.kw}” — average rank ${fmtAvg(k.avg)}`;
+    img.onload = () => { img.classList.add("is-loaded"); fig.classList.remove("is-loading"); };
+    img.onerror = () => showGridInMap(k);
+    if (k.image) img.src = k.image;
+    else showGridInMap(k);
 
-    $("#ldSide").innerHTML = `
-      <div class="ldstat">
+    paintLdMeta();
+    paintLdLinks(k);
+    paintLdSide(k);
+    paintRankGrid(k);
+  }
+
+  /* When Local Dominator's map image can't be shown, draw the scan's own
+     rank grid in its place so the panel is never empty. */
+  function showGridInMap(k) {
+    const fig = $("#ldMap"), img = $("#ldImg"), fb = $("#ldFallback");
+    fig.classList.remove("is-loading");
+    img.hidden = true;
+    img.removeAttribute("src");
+    fb.hidden = false;
+    if (!k.grid) {
+      fb.innerHTML = `<p class="ldmap__note">The map image for this scan isn't available right now.</p>`;
+      return;
+    }
+    fb.innerHTML = `<div class="geo geo--map"></div>
+      <p class="ldmap__note">Map image unavailable — showing every sample point from this scan instead.</p>`;
+    window.__renderGeo($(".geo", fb), { keyword: k.kw, grid: k.grid, shape: k.shape });
+  }
+
+  function paintLdLinks(k) {
+    const ext = `<svg class="ldlinks__ext"><use href="#i-external"></use></svg>`;
+    const link = (href, icon, label, tip) => href
+      ? `<a class="btn btn--ghost btn--sm" href="${esc(href)}" target="_blank" rel="noopener noreferrer" data-tip="${tip}">
+           <svg><use href="#i-${icon}"></use></svg> ${label} ${ext}</a>`
+      : "";
+    const html = ld.mode === "live" ? [
+      link(k.live, "map", "Open interactive map", "Opens this scan in Local Dominator — zoom in and click any pin to see who outranks you at that spot."),
+      link(k.report, "doc", "Scan analysis report", "Local Dominator's written analysis of this scan: strong and weak zones, top competitors and next steps."),
+      link(k.campaign, "calendar", "All scans for this keyword", "Every scheduled run of this keyword in Local Dominator.")
+    ].join("") : "";
+    const box = $("#ldLinks");
+    box.innerHTML = html;
+    box.hidden = !html.trim();
+    window.__bindTips(box);
+  }
+
+  function rankDelta(k) {
+    if (!k.prev || typeof k.avg !== "number") return "";
+    const d = Math.round((k.prev.avg - k.avg) * 100) / 100;     // positive = moved up
+    const when = fmtDate(k.prev.date);
+    if (d === 0) return `<span class="ldstat__delta">No change since ${when}</span>`;
+    const dir = d > 0 ? "up" : "down";
+    return `<span class="ldstat__delta ldstat__delta--${dir}">
+      <svg><use href="#i-${dir}"></use></svg>${Math.abs(d).toFixed(2)} since ${when}</span>`;
+  }
+
+  function paintLdSide(k) {
+    const s = k.stats || {};
+    const live = ld.mode === "live";
+    const bands = live ? RANK_BANDS : RANK_BANDS.slice(0, 3);
+    const hasTrend = live && (k.history || []).length >= 3;
+
+    let html = `
+      <div class="ldstat" data-tip="Average Google Maps position across the sample points. Lower is better — 1 is the top of the map pack.">
         <span class="ldstat__label">Average rank</span>
-        <div class="ldstat__value">${k.avg}</div>
+        <div class="ldstat__value">${fmtAvg(k.avg)}</div>
+        ${live ? rankDelta(k) : ""}
+        ${hasTrend ? `<div class="ldspark" id="ldSpark" aria-hidden="true"></div>
+          <span class="ldstat__sub">${k.history.length} scans since ${fmtDate(k.history[0].date)} · line rising = ranking better</span>` : ""}
       </div>
       <div class="ldstat">
         <span class="ldstat__label">Coverage breakdown</span>
-        <div class="ldbreak" style="margin-top:10px">
-          ${RANK_BANDS.map(b => `
+        <div class="ldbreak">
+          ${bands.map(b => `
             <div class="ldbreak__row" data-tip="${b.label} — share of sample points in this band.">
               <span class="ldbreak__dot" style="background:var(${b.color})"></span>
               <span class="ldbreak__name">${b.label}</span>
-              <span class="ldbreak__val">${k[b.key] ? k[b.key] + "%" : "—"}</span>
+              <span class="ldbreak__val">${s[b.key] ? s[b.key] + "%" : "—"}</span>
             </div>`).join("")}
         </div>
+      </div>`;
+
+    if (live) {
+      html += `
+      <div class="ldstat" data-tip="Sample points where the business appears anywhere in the top 20 Google Maps results.">
+        <span class="ldstat__label">Visible at</span>
+        <div class="ldstat__value">${s.found ?? "—"}<small> / ${s.points ?? "—"} points</small></div>
       </div>
+      <div class="ldstat" data-tip="When Local Dominator ran this scan, and the grid it used.">
+        <span class="ldstat__label">Last scanned</span>
+        <div class="ldstat__value ldstat__value--sm">${fmtDate(k.scannedAt)}</div>
+        <span class="ldstat__sub">${esc(gridLabel(k))}${k.source === "scheduled" ? " · scheduled scan" : ""}</span>
+      </div>`;
+    } else {
+      html += `
       <div class="ldstat">
         <span class="ldstat__label">Competitors tracked</span>
         <div class="ldstat__value">${k.competitors}</div>
@@ -273,28 +489,97 @@
         <span class="ldstat__label">TARP score</span>
         <div class="ldstat__value">${DEMO.localDominator.tarp}</div>
       </div>`;
+    }
 
+    $("#ldSide").innerHTML = html;
+    if (hasTrend) paintLdSpark(k);
     window.__bindTips($("#ldSide"));
   }
 
+  /* Rank is lower-is-better, so the trend is plotted inverted: a rising line
+     always means improvement, like every other sparkline on the dashboard. */
+  function paintLdSpark(k) {
+    const m = $("#ldSpark");
+    if (!m || !m.clientWidth) return;
+    window.Charts.sparkline(m, k.history.map(h => -h.avg), { color: cssVar("--series-1") });
+  }
+
+  function paintRankGrid(k) {
+    if (k.grid) {
+      $("#geoKw2").textContent = `“${k.kw}” · ${gridLabel(k)} · ${fmtDate(k.scannedAt)}`;
+      window.__renderGeo($("#geoGrid2"), { keyword: k.kw, grid: k.grid, shape: k.shape });
+    } else {
+      const g = DEMO.geoGrid;
+      $("#geoKw2").textContent = `“${g.keyword}” · ${g.radius} radius · sample layout`;
+    }
+  }
+
+  /* The Overview card mirrors one keyword — the demo's headline term if it
+     was scanned, otherwise the best-ranked live keyword. */
+  function paintOverviewGeo() {
+    if (ld.mode !== "live") return;
+    const want = DEMO.geoGrid.keyword.toLowerCase();
+    const k = ld.keywords.find(x => x.grid && x.kw.toLowerCase() === want) || ld.keywords.find(x => x.grid);
+    if (!k) return;
+
+    $("#geoKw").textContent = `“${k.kw}” · ${gridLabel(k)} · ${fmtDate(k.scannedAt, false)}`;
+    window.__renderGeo($("#geoGrid"), { keyword: k.kw, grid: k.grid, shape: k.shape });
+    $("#geoAvg").textContent = fmtAvg(k.avg);
+    $("#geoTop3").textContent = Math.round((k.stats && k.stats.high) || 0) + "%";
+
+    const delta = $("#geoAvgDelta");
+    if (k.prev) {
+      const d = Math.round((k.prev.avg - k.avg) * 10) / 10;
+      delta.textContent = d === 0 ? "—" : `${d > 0 ? "↑" : "↓"} ${Math.abs(d)}`;
+      delta.style.color = d > 0 ? "var(--good)" : d < 0 ? "var(--critical)" : "var(--text-muted)";
+    } else {
+      delta.textContent = "";
+    }
+    $("#geoTop3Delta").textContent = "";      // no prior grid to compare against
+  }
+
   function renderLdBars() {
-    const ks = [...DEMO.localDominator.keywords].sort((a, b) => a.avg - b.avg);
-    const worst = Math.max(...ks.map(k => k.avg));
+    const ks = ld.keywords
+      .map((k, i) => ({ ...k, i }))
+      .filter(k => typeof k.avg === "number")
+      .sort((a, b) => a.avg - b.avg);
+    if (!ks.length) { $("#ldBars").innerHTML = ""; return; }
+    const worst = Math.max(...ks.map(k => k.avg)) || 1;
     const c1 = cssVar("--series-1"), demph = cssVar("--demph");
 
-    $("#ldBars").innerHTML = ks.map((k, i) => `
-      <div class="hbar" data-tip="<strong>${k.kw}</strong>Average rank ${k.avg} across ${k.competitors} tracked competitors.">
-        <span class="hbar__name">${k.kw}</span>
+    $("#ldBars").innerHTML = ks.map((k, rank) => {
+      const tip = ld.mode === "live"
+        ? `<strong>${esc(k.kw)}</strong>Average rank ${fmtAvg(k.avg)} · visible at ${k.stats ? k.stats.found + " of " + k.stats.points : "—"} points.<br><em style='opacity:.7'>Click to open this map.</em>`
+        : `<strong>${esc(k.kw)}</strong>Average rank ${fmtAvg(k.avg)} across ${k.competitors} tracked competitors.`;
+      return `
+      <button class="hbar hbar--btn" data-ld="${k.i}" data-tip="${tip}">
+        <span class="hbar__name">${esc(k.kw)}</span>
         <span class="hbar__track">
           <span class="hbar__fill" data-w="${(k.avg / worst * 100).toFixed(1)}"
-                style="background:${i === 0 ? c1 : demph}"></span>
+                style="background:${rank === 0 ? c1 : demph}"></span>
         </span>
-        <span class="hbar__val">${k.avg}</span>
-      </div>`).join("");
+        <span class="hbar__val">${fmtAvg(k.avg)}</span>
+      </button>`;
+    }).join("");
 
     requestAnimationFrame(() =>
       $$("#ldBars .hbar__fill").forEach(f => f.style.width = f.dataset.w + "%"));
     window.__bindTips($("#ldBars"));
+  }
+
+  function selectLdKeyword(i) {
+    if (!ld.keywords[i] || i === ld.active) return;
+    ld.active = i;
+    $$("#ldPicker button").forEach(x => x.classList.toggle("is-active", +x.dataset.ld === i));
+    paintLdMap();
+  }
+
+  /* Charts measure their box, so they are redrawn when the view is shown and
+     when the theme changes. */
+  function redrawLocalCharts() {
+    renderLdBars();
+    const k = ld.keywords[ld.active];
+    if (k && (k.history || []).length >= 3 && ld.mode === "live") paintLdSpark(k);
   }
 
   /* ================================================================ GA4 */
@@ -533,16 +818,21 @@
 
       $("#ldPicker").addEventListener("click", e => {
         const b = e.target.closest("[data-ld]");
+        if (b) selectLdKeyword(+b.dataset.ld);
+      });
+
+      // The coverage bars double as a keyword picker.
+      $("#ldBars").addEventListener("click", e => {
+        const b = e.target.closest("[data-ld]");
         if (!b) return;
-        ldActive = +b.dataset.ld;
-        $$("#ldPicker button").forEach(x => x.classList.remove("is-active"));
-        b.classList.add("is-active");
-        paintLdMap();
+        selectLdKeyword(+b.dataset.ld);
+        $("#ldPicker").scrollIntoView({ behavior: "smooth", block: "start" });
       });
     },
     refreshRankings,
     renderLocalDominator,
-    renderLdBars,
+    loadLiveLocal,
+    redrawLocalCharts,
     renderGa4,
     renderGbpExtra,
     renderAiExtra,

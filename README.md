@@ -10,11 +10,12 @@ the numbers are demo data pending the API integrations.
 
 ## Running it
 
-It is a static site with **no build step and no dependencies**. Open
-`index.html` directly, or serve the folder:
+It is a static site with **no build step and no dependencies**, plus one
+serverless function in `api/`. Open `index.html` directly for the offline
+demo, or run it with the live endpoint:
 
 ```bash
-npx serve .
+vercel dev          # needs LD_API_KEY in .env.local (git-ignored)
 ```
 
 **Demo sign-in:** the credentials are pre-filled — just press *Sign in to dashboard*.
@@ -44,13 +45,32 @@ comparison selector (previous period / same period last year / custom / none).
 Changing either repaints the chart, the legend and the keyword table, which
 shows the current value, the prior value, and the percentage change per keyword.
 
-### Local Dominator
-The Local Map Grid uses **real August 2026 captures** for this account —
-six keywords, each with its own map and the stats read off that capture
-(average rank, high/medium/low coverage split, competitors tracked, TARP).
-Images live in `assets/img/local/` as WebP. When the API is connected, swap
-`localDominator.keywords[].img` for a live render; the rest of the view is
-already driven by data.
+### Local Dominator — live
+The Local Map Grid (and the Overview's map card) pull **live scans from the
+Local Dominator API** through `/api/local-grid`, a Vercel function that keeps
+the API key server-side. For each tracked keyword it shows the latest scan:
+Local Dominator's own heat-map image, the real rank grid (any size up to
+21×21), average rank and its change since the previous scan, a rank trend,
+the high/medium/low/not-found split, and links to the interactive map and
+scan report.
+
+It reads both **one-time scans** (`GET /v1/scans`) and **scheduled
+campaigns** (`/v1/scheduled-scans` → runs), keeps the newest scan per
+keyword and builds history from the rest. Responses are cached at Vercel's
+edge for 30 minutes.
+
+If the key is missing, Local Dominator is down, or the page is opened as a
+local file, the view falls back to the saved **August 2026 captures** in
+`assets/img/local/` and says so (amber "Saved capture" chip — hover it for
+the reason). If a map image will not load, the scan's rank grid is drawn in
+its place.
+
+**Setup:** add `LD_API_KEY` in Vercel → Project → Settings → Environment
+Variables, then redeploy. **Adding a client:** add an entry to
+[`api/_lib/clients.js`](api/_lib/clients.js) with the same id as in
+`data.js` — set `placeId` (Google Place ID) for exact matching.
+
+Tests: `node --test tests/local-grid.test.js` (mocked API, no key needed).
 
 ### Interaction
 - Login / logout with a profile menu (details, notifications, data sources, settings)
@@ -110,7 +130,7 @@ fetch:
 | `kpis`, `traffic`, `keywords` | Google Search Console API |
 | `kpis.conversions` | GA4 Data API |
 | `gbp` | Google Business Profile API |
-| `geoGrid` | Local Dominator API |
+| `localDominator`, `geoGrid` | ✅ **Live** — Local Dominator API via `/api/local-grid` (demo values are the fallback) |
 | `competitors`, `recommendations`, `modules` | Makarios competitor-analysis suite |
 | `backlinks` | Moz / Ahrefs |
 
@@ -122,6 +142,11 @@ The `modules` list maps 1:1 to the existing Makarios audit skills
 This mockup has **no authentication** — the login screen is a visual prop. A
 production build needs real auth, per-client data scoping, server-side API
 credential storage (never client-side OAuth tokens), and an audit trail.
+
+Until real auth exists, `/api/local-grid?client=<id>` is public: anyone with
+the URL can read that client's map rankings. It only serves clients listed in
+`api/_lib/clients.js` and never exposes the API key, but per-client access
+control belongs in front of it before real clients get logins.
 
 ---
 
@@ -135,8 +160,12 @@ assets/js/data.js           all demo data — the only file to replace
 assets/js/charts.js         dependency-free SVG charts
 assets/js/modules.js        date range + comparison, Local Dominator, GA4
 assets/js/app.js            rendering, tooltips, nav, theme, auth flow
-assets/img/local/*.webp     real Local Dominator map captures
-vercel.json                 caching + security headers
+assets/img/local/*.webp     saved Local Dominator captures (offline fallback)
+api/local-grid.js           serverless endpoint — live Local Dominator data
+api/_lib/localDominator.js  Local Dominator API client + normalisation
+api/_lib/clients.js         which scans belong to which client
+tests/                      endpoint tests (excluded from deploys)
+vercel.json                 caching + security headers, function limits
 ```
 
 ### A note on chart sizing

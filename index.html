@@ -54,6 +54,8 @@
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.2V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.6" y="5" width="16.8" height="16" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.6 9.6h16.8M8.4 3v4M15.6 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3.6 20.4h16.8M6.6 20.4V11M11 20.4V5.6M15.4 20.4v-6.2M19.8 20.4V8.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M13.6 4.4h6v6M19.6 4.4 11 13M17.6 14v4.6a1.6 1.6 0 0 1-1.6 1.6H5.4a1.6 1.6 0 0 1-1.6-1.6V8a1.6 1.6 0 0 1 1.6-1.6H10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11.5A8 8 0 0 0 5.6 6.6L4 8.4M4 4v4.4h4.4M4 12.5a8 8 0 0 0 14.4 4.9l1.6-1.8M20 20v-4.4h-4.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.2 2.6 20h18.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.2M12 17.2h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </defs>
 </svg>
@@ -343,7 +345,7 @@
               <div class="card__head">
                 <div class="grow">
                   <h3>Local map coverage
-                    <span class="info" data-tip="A 7×7 grid of sample points around the business. Each square shows your Google Maps rank when someone searches from that exact spot. Darker green = better. The ringed square is the shop itself.">?</span>
+                    <span class="info" data-tip="A grid of sample points around the business. Each square shows your Google Maps rank when someone searches from that exact spot. Darker green = better; a dash means not in the top 20. The ringed square is the shop itself.">?</span>
                   </h3>
                   <p id="geoKw">“fence installation chicago” · 5 mi radius</p>
                 </div>
@@ -357,10 +359,10 @@
                 </div>
                 <div class="geostats">
                   <div data-tip="Average Google Maps position across all 49 sample points.">
-                    <b id="geoAvg">6.9</b><span>Avg. rank <span style="color:var(--good);font-weight:650">↑ 4.3</span></span>
+                    <b id="geoAvg">6.9</b><span>Avg. rank <span id="geoAvgDelta" style="color:var(--good);font-weight:650">↑ 4.3</span></span>
                   </div>
                   <div data-tip="Share of sample points where the business ranks in the top 3 — the Google map pack.">
-                    <b id="geoTop3">24%</b><span>Top-3 share <span style="color:var(--good);font-weight:650">↑ 16</span></span>
+                    <b id="geoTop3">24%</b><span>Top-3 share <span id="geoTop3Delta" style="color:var(--good);font-weight:650">↑ 16</span></span>
                   </div>
                 </div>
               </div>
@@ -487,20 +489,24 @@
         <div class="card" style="margin-bottom:16px">
           <div class="card__head">
             <div class="grow">
-              <h3>Local Dominator — live map captures
-                <span class="info" data-tip="Each capture samples your Google Maps rank from dozens of points across Chicago. A star is a top-3 placement; green is strong, amber mid, red weak. Pick a keyword to see its coverage.">?</span>
+              <h3>Local Dominator map rankings
+                <span class="info" data-tip="Each scan checks your Google Maps rank from dozens of points across the service area. A star is a top-3 placement; green is strong, amber mid, red weak. Pick a keyword to see its coverage.">?</span>
               </h3>
               <p id="ldMeta">Americana Iron Works &amp; Fence · 939 W North Ave, Chicago, IL 60642 · August 2026</p>
             </div>
-            <span class="chip" data-tip="These are real Local Dominator captures. The live API connection is the next integration.">Static capture</span>
+            <span class="chip" id="ldChip" data-tip="Connecting to Local Dominator…"><i></i> Connecting…</span>
           </div>
           <div class="card__body">
             <div class="kwpicker" id="ldPicker"></div>
 
             <div class="ldwrap">
-              <figure class="ldmap">
-                <img id="ldImg" alt="Local Dominator map" loading="lazy">
-              </figure>
+              <div class="ldmain">
+                <figure class="ldmap is-loading" id="ldMap">
+                  <img id="ldImg" alt="Local Dominator map" loading="lazy" referrerpolicy="no-referrer">
+                  <div class="ldmap__fallback" id="ldFallback" hidden></div>
+                </figure>
+                <div class="ldlinks" id="ldLinks"></div>
+              </div>
 
               <div class="ldside" id="ldSide"></div>
             </div>
@@ -524,8 +530,8 @@
             <div class="card">
               <div class="card__head">
                 <div class="grow">
-                  <h3>Modelled 7×7 grid
-                    <span class="info" data-tip="A simplified grid view of the same data. The rank is printed in every cell, so the colour is never the only encoding.">?</span>
+                  <h3>Rank grid
+                    <span class="info" data-tip="Every sample point from the selected scan, laid out as a grid. The rank is printed in every cell, so colour is never the only encoding. A dash means the business was not in the top 20 at that point. The ringed cell is the business.">?</span>
                   </h3>
                   <p id="geoKw2">“fence installation chicago” · 5 mi radius</p>
                 </div>
@@ -536,7 +542,7 @@
               </div>
             </div>
             <div class="card">
-              <div class="card__head"><div class="grow"><h3>What this tells us</h3></div></div>
+              <div class="card__head"><div class="grow"><h3>What this tells us</h3><p>Strategist notes · August 2026 review</p></div></div>
               <div class="card__body">
                 <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">
                   Google returns different map results depending on where the searcher is standing. Ranking #1 at the shop but #15 three miles west means you are invisible to a large share of the metro.

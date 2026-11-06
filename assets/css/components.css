@@ -165,6 +165,7 @@
 :root[data-theme="dark"] .kwpicker i { background: rgba(255, 255, 255, .1); }
 
 .ldwrap { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 18px; align-items: start; }
+.ldmain { min-width: 0; }
 
 .ldmap {
   margin: 0;
@@ -183,6 +184,45 @@
   transition: opacity .35s var(--ease);
 }
 .ldmap img.is-loaded { opacity: 1; }
+
+/* Skeleton sweep while the map image loads. */
+.ldmap.is-loading { min-height: 420px; }
+.ldmap.is-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, var(--surface-3) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: ldsweep 1.4s var(--ease) infinite;
+  pointer-events: none;
+}
+@keyframes ldsweep { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+
+.ldmap__fallback { padding: 26px 22px 18px; }
+.ldmap__fallback .geo { max-width: 520px; }
+.ldmap__note { margin-top: 14px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+.ldlinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ldlinks a.btn { text-decoration: none; }
+.ldlinks .ldlinks__ext { width: 12px; height: 12px; opacity: .6; }
+
+.ldstat__value small { font-size: 13px; font-weight: 550; letter-spacing: 0; color: var(--text-muted); }
+.ldstat__value--sm { font-size: 19px; margin-top: 2px; }
+.ldstat__sub { display: block; margin-top: 4px; font-size: 11.5px; line-height: 1.45; color: var(--text-muted); }
+.ldstat__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 4px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+.ldstat__delta svg { width: 11px; height: 11px; }
+.ldstat__delta--up { color: var(--good); }
+.ldstat__delta--down { color: var(--critical); }
+.ldspark { height: 34px; margin-top: 10px; }
+.ldstat .ldbreak { margin-top: 10px; }
 
 .ldstat {
   padding: 13px 14px;
@@ -214,6 +254,26 @@
 }
 .hbar__fill { display: block; height: 100%; width: 0; border-radius: var(--r-full); transition: width 1s var(--ease-out); }
 .hbar__val { width: 44px; flex: none; text-align: right; font-size: 12.5px; font-weight: 680; color: var(--text-primary); }
+
+/* Bars that act as buttons (Local Map Grid: click a keyword to open its map). */
+.hbar--btn {
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm, 6px);
+  padding: 9px 6px;
+  margin: 0 -6px;
+  width: calc(100% + 12px);
+  cursor: pointer;
+  transition: background-color .16s var(--ease);
+}
+.hbar--btn:hover, .hbar--btn:focus-visible { background: var(--surface-2); }
+.hbar--btn:focus-visible { outline: 2px solid var(--brand-400); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .spin, .ldmap.is-loading::after { animation: none; }
+}
 
 /* --------------------------------------------------------------------------
    GA4

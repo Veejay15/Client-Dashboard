@@ -3,5 +3,7 @@ node_modules/
 Thumbs.db
 .vercel
 *.log
+
+# Secrets — the Local Dominator key lives in Vercel, or in .env.local for `vercel dev`
 .env
-.env.local
+.env*.local

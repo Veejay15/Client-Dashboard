@@ -37,13 +37,14 @@
     $$("[data-tip]", root).forEach(node => {
       if (node.__tipBound) return;
       node.__tipBound = true;
-      const text = node.getAttribute("data-tip");
-      node.addEventListener("mouseenter", e => Tip.show(e.clientX, e.clientY, text));
+      // Read at show time — some tips (e.g. live-data status) change after binding.
+      const text = () => node.getAttribute("data-tip");
+      node.addEventListener("mouseenter", e => Tip.show(e.clientX, e.clientY, text()));
       node.addEventListener("mousemove",  e => Tip.move(e.clientX, e.clientY));
       node.addEventListener("mouseleave", () => Tip.hide());
       node.addEventListener("focus",      () => {
         const r = node.getBoundingClientRect();
-        Tip.show(r.left + r.width / 2, r.bottom, text);
+        Tip.show(r.left + r.width / 2, r.bottom, text());
       });
       node.addEventListener("blur", () => Tip.hide());
     });
@@ -164,24 +165,60 @@
     return rank <= 8 ? "#ffffff" : "#0c110d";
   }
 
-  function renderGeo(mount) {
-    const g = DEMO.geoGrid;
+  /* A grid model is { keyword, grid: rank[][], shape }. Live Local Dominator
+     scans can be any size up to 21×21; the demo grid is 7×7. Each mount keeps
+     its last model so a theme switch repaints the same data. */
+  const geoModels = new WeakMap();
+
+  function demoGeoModel() {
+    const g = DEMO.geoGrid, n = 7, grid = [];
+    for (let r = 0; r < n; r++) grid.push(g.cells.slice(r * n, r * n + n));
+    return { keyword: g.keyword, grid, shape: "square" };
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+  }
+
+  function renderGeo(mount, model) {
+    if (!mount) return;
+    model = model || geoModels.get(mount) || demoGeoModel();
+    geoModels.set(mount, model);
+
+    const n = model.grid.length, m = (n - 1) / 2;
+    const step = Math.max(8, Math.round(196 / n));
+    const kw = escHtml(model.keyword);
+
     mount.innerHTML = "";
-    g.cells.forEach((rank, i) => {
-      const row = Math.floor(i / 7), col = i % 7;
+    mount.style.setProperty("--n", n);
+    mount.classList.toggle("geo--dense", n > 9);
+    mount.classList.toggle("geo--xdense", n > 15);
+
+    model.grid.forEach((row, r) => row.forEach((rank, col) => {
       const cell = document.createElement("div");
-      cell.className = "geocell" + (row === 3 && col === 3 ? " geocell--center" : "");
-      cell.style.setProperty("--d", ((row + col) * 28) + "ms");
-      cell.style.background = `var(${rankColor(rank)})`;
-      cell.style.color = rankInk(rank);
-      cell.textContent = rank;
+      // Circle scans have no sample points in the corners.
+      if (model.shape === "circle" && (r - m) ** 2 + (col - m) ** 2 > (m + 0.5) ** 2) {
+        cell.className = "geocell geocell--void";
+        mount.append(cell);
+        return;
+      }
+      const found = typeof rank === "number" && rank >= 1 && rank <= 20;
+      const centre = r === m && col === m;
+      cell.className = "geocell" + (centre ? " geocell--center" : "") + (found ? "" : " geocell--out");
+      cell.style.setProperty("--d", ((r + col) * step) + "ms");
+      cell.style.background = `var(${rankColor(found ? rank : 21)})`;
+      cell.style.color = rankInk(found ? rank : 21);
+      cell.textContent = found ? rank : "–";
       cell.setAttribute("data-tip",
-        `<strong>Grid point ${row + 1}·${col + 1}</strong>Rank <b>#${rank}</b> for “${g.keyword}”` +
-        (row === 3 && col === 3 ? "<br><em style='opacity:.7'>Business location</em>" : ""));
+        `<strong>Grid point ${r + 1}·${col + 1}</strong>` +
+        (found ? `Rank <b>#${rank}</b> for “${kw}”` : `Not in the top 20 for “${kw}”`) +
+        (centre ? "<br><em style='opacity:.7'>Business location</em>" : ""));
       mount.append(cell);
-    });
+    }));
     bindTips(mount);
   }
+  window.__renderGeo = renderGeo;
 
   /* -------------------------------------------------------- keywords */
   function moveCell(pos, prev) {
@@ -428,7 +465,7 @@
     if (window.Modules) {
       window.Modules.refreshRankings();
       window.Modules.renderGa4();
-      window.Modules.renderLdBars();
+      window.Modules.redrawLocalCharts();
       window.Modules.renderGbpExtra();
       window.Modules.renderAiExtra();
       window.Modules.renderActionsExtra();
@@ -471,7 +508,7 @@
   const TITLES = {
     overview:    ["Overview", "Last 3 months"],
     rankings:    ["Search Rankings", "12 tracked keywords"],
-    local:       ["Local Map Grid", "Local Dominator · August 2026"],
+    local:       ["Local Map Grid", "Local Dominator · connecting…"],
     ga4:         ["Website Analytics", "Google Analytics 4 · last 3 months"],
     gbp:         ["Business Profile", "Google Business Profile performance"],
     ai:          ["AI Visibility", "120 tracked prompts · updated weekly"],
@@ -479,6 +516,14 @@
     backlinks:   ["Backlinks", "91 referring domains"],
     actions:     ["Action Plan", "5 open items"],
     reports:     ["Reports", "5 documents available"]
+  };
+
+  /* Views fed by live data update their own subtitle once the data lands. */
+  window.__setViewSub = (view, text) => {
+    if (!TITLES[view]) return;
+    TITLES[view][1] = text;
+    const active = $(".nav__item.is-active");
+    if (active && active.dataset.view === view) $("#viewSub").textContent = `Americana Iron Works & Fence · ${text}`;
   };
 
   function go(view) {
@@ -512,8 +557,8 @@
     // Series tokens changed — every chart and the geo grid must be restepped.
     requestAnimationFrame(() => {
       drawCharts();
-      renderGeo($("#geoGrid"));
-      renderGeo($("#geoGrid2"));
+      $$(".geo").forEach(g => { if (g.childElementCount) renderGeo(g); });
+      window.Modules.redrawLocalCharts();
       $$(".stat__spark").forEach(m => {
         if (m.__values) window.Charts.sparkline(m, m.__values, { color: cssVar("--series-1") });
       });
@@ -574,6 +619,7 @@
     /* Extended modules: date controls, Local Dominator maps, GA4 */
     window.Modules.init(() => window.Modules.refreshRankings());
     window.Modules.renderLocalDominator();
+    window.Modules.loadLiveLocal();          // async — repaints when Local Dominator answers
     window.Modules.renderGa4();
     window.Modules.refreshRankings();
     window.Modules.renderGbpExtra();
